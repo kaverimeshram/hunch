@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-source /Volumes/AgentData/near/build/env.sh
-set -a
-. ~/near-build/sworn/.env
-set +a
-: "${NEAR_AI_API_KEY:?NEAR_AI_API_KEY must be present in ~/near-build/sworn/.env}"
+# Optional toolchain setup. Defaults to the original maintainer's path; override with
+# HUNCH_TOOLCHAIN_ENV, or put cargo, cargo-near and near on PATH yourself.
+HUNCH_TOOLCHAIN_ENV="${HUNCH_TOOLCHAIN_ENV:-/Volumes/AgentData/near/build/env.sh}"
+if [ -f "$HUNCH_TOOLCHAIN_ENV" ]; then source "$HUNCH_TOOLCHAIN_ENV"; fi
+# NEAR_AI_API_KEY may already be exported, or come from an env file (never committed).
+HUNCH_SECRETS_ENV="${HUNCH_SECRETS_ENV:-$HOME/near-build/sworn/.env}"
+if [ -f "$HUNCH_SECRETS_ENV" ]; then
+  set -a
+  . "$HUNCH_SECRETS_ENV"
+  set +a
+fi
+: "${NEAR_AI_API_KEY:?export NEAR_AI_API_KEY or set HUNCH_SECRETS_ENV to a file that defines it}"
 SIGN_WITH="${SIGN_WITH:-sign-with-legacy-keychain}"
 NETWORK="${NETWORK:-testnet}"
 SUFFIX="$(date -u +%y%m%d%H%M%S)-$$"
