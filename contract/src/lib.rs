@@ -18,7 +18,7 @@ const MAX_CLAIM_BYTES: usize = 1024;
 const MAX_SOURCE_BYTES: usize = 1024;
 const MAX_RECEIPT_BYTES: usize = 16_384;
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum Side { Yes, No }
@@ -79,7 +79,7 @@ trait ResolutionCallback {
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
-pub struct Truthpage {
+pub struct Hunch {
     arbiter: AccountId,
     registry: AccountId,
     model_id: String,
@@ -91,7 +91,7 @@ pub struct Truthpage {
 }
 
 #[near]
-impl Truthpage {
+impl Hunch {
     #[init]
     pub fn new(arbiter: AccountId, registry: AccountId, model_id: String) -> Self {
         require!(!model_id.is_empty() && model_id.len() <= 256, "invalid model id");
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn fact_market_records_stakes_and_odds_inputs() {
         setup("alice.testnet", 1_000_000_000, FACT_BOND);
-        let mut c = Truthpage::new(account("arbiter.testnet"), account("sworn.testnet"), "Qwen/Qwen3.8-27B".into());
+        let mut c = Hunch::new(account("arbiter.testnet"), account("sworn.testnet"), "Qwen/Qwen3.8-27B".into());
         c.create_fact("f".into(), "Claim".into(), 2_000);
         c.add_source("f".into(), "https://example.com/source".into());
         setup("alice.testnet", 1_100_000_000, 10);
@@ -289,7 +289,7 @@ mod tests {
     #[should_panic(expected = "only arbiter can resolve")]
     fn resolve_without_arbiter_is_refused() {
         setup("alice.testnet", 3_000_000_000, FACT_BOND);
-        let mut c = Truthpage::new(account("arbiter.testnet"), account("sworn.testnet"), "Qwen/Qwen3.8-27B".into());
+        let mut c = Hunch::new(account("arbiter.testnet"), account("sworn.testnet"), "Qwen/Qwen3.8-27B".into());
         c.create_fact("f".into(), "Claim".into(), 4_000);
         setup("mallory.testnet", 4_000_000_000, 0);
         let receipt = Receipt { public_key: String::new(), model_id: "Qwen/Qwen3.8-27B".into(), request_sha256: String::new(), response_sha256: String::new(), signature: String::new(), request_body: String::new(), response_body: String::new() };

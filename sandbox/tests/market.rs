@@ -17,7 +17,7 @@ fn wasm() -> &'static Vec<u8> {
             .status()
             .expect("cargo near must be installed on the remote build host");
         assert!(status.success(), "cargo near build failed");
-        std::fs::read(out.join("truthpage_contract.wasm")).unwrap()
+        std::fs::read(out.join("hunch_contract.wasm")).unwrap()
     })
 }
 
@@ -25,7 +25,7 @@ async fn deploy() -> (near_workspaces::Worker<near_workspaces::network::Sandbox>
     let worker = near_workspaces::sandbox().await.unwrap();
     let root = worker.root_account().unwrap();
     let arbiter = root.create_subaccount("arbiter").initial_balance(NearToken::from_near(10)).transact().await.unwrap().unwrap();
-    let account = root.create_subaccount("truthpage").initial_balance(NearToken::from_near(30)).transact().await.unwrap().unwrap();
+    let account = root.create_subaccount("hunch").initial_balance(NearToken::from_near(30)).transact().await.unwrap().unwrap();
     let contract = account.deploy(wasm()).await.unwrap().unwrap();
     contract.call("new").args_json(json!({"arbiter":arbiter.id(),"registry":"sworn-reg7-1113.testnet","model_id":"Qwen/Qwen3.6-35B-A3B-FP8"})).transact().await.unwrap().into_result().unwrap();
     (worker, root, arbiter, contract)

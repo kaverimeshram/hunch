@@ -4,14 +4,14 @@ import { writeFile } from 'node:fs/promises';
 const [contract, id, output] = process.argv.slice(2);
 const key = process.env.NEAR_AI_API_KEY;
 if (!contract || !id || !output || !key) throw new Error('contract, fact id, output path, and NEAR_AI_API_KEY are required');
-const rpc = process.env.TRUTHPAGE_RPC || 'https://near-testnet.drpc.org';
+const rpc = process.env.HUNCH_RPC || process.env.TRUTHPAGE_RPC || 'https://near-testnet.drpc.org';
 const model = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 async function call(method, args) {
   const result = await fetch(rpc, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 'truthpage', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') } }),
+    body: JSON.stringify({ jsonrpc: '2.0', id: 'hunch', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: Buffer.from(JSON.stringify(args)).toString('base64') } }),
     signal: AbortSignal.timeout(15_000),
   });
   const json = await result.json();

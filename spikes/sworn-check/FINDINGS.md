@@ -6,6 +6,6 @@ Measured: `sworn-reg7-1113.testnet` returned `ok: true` for the Qwen/Qwen3.6-35B
 
 Negative case: The mutated response hash was refused by the live registry. A missing API key also caused the direct cloud API preflight to fail before any request was made; no key value was printed.
 
-Caveat: The registry exposes `check` as a view. Truthpage must make the view call as a promise and finalize resolution in a callback only after a successful response. The callback cannot prove that the upstream view remains available, so pending resolutions need a retry or cancellation path.
+Caveat: The registry exposes `check` as a view. Hunch must make the view call as a promise and finalize resolution in a callback only after a successful response. The callback cannot prove that the upstream view remains available, so pending resolutions need a retry or cancellation path.
 
 Blocks product: no for the contract verification path; yes for the final live inference E2E until a runtime API key is available.
