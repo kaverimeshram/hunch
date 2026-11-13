@@ -10,14 +10,14 @@
     <div id="app" aria-busy="true">
       <header class="masthead">
         <a class="wordmark" href="/">Hunch<span class="mark">.</span></a>
-        <a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener">NEAR testnet</a>
+        <div class="masthead-actions"><a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener">NEAR testnet</a><button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button></div>
       </header>
       <main>
         <section class="intro">
           <div>
             <p class="kicker">Claims under review</p>
             <h1>What holds up<br />when the stakes are visible?</h1>
-            <p class="lede">Follow a claim, inspect its sources, and see how participants are staking their view.</p>
+            <p class="lede">Follow a claim, inspect its evidence, see where participants stake their view, and check how it was settled.</p>
           </div>
           <form id="contract-form" class="contract-form">
             <label for="contract-id">Hunch contract</label>
@@ -26,12 +26,12 @@
           </form>
         </section>
         <section aria-labelledby="markets-title" class="market-index">
-          <div class="section-heading"><div><p class="kicker">Testnet markets</p><h2 id="markets-title">Open claims</h2></div><p id="market-count" class="quiet"></p></div>
+          <div class="section-heading"><div><p class="kicker">Testnet markets</p><h2 id="markets-title">Claims</h2></div><p id="market-count" class="quiet"></p></div>
           <p id="page-state" class="notice" role="status">Enter a contract account to read its live markets.</p>
           <ol id="market-list" class="market-list"></ol>
         </section>
       </main>
-      <footer><span>Odds show the share of NEAR staked on each side.</span><span>Resolution receipts are checked by Sworn.</span></footer>
+      <footer><span>Odds show the share of NEAR staked on each side.</span><span>Resolution receipts are checked by Sworn. That proves authenticity, not correctness.</span></footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

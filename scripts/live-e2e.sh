@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-source /Volumes/AgentData/near/build/env.sh
-set -a
-. ~/near-build/.env.near-ai
-set +a
-: "${NEAR_AI_API_KEY:?NEAR_AI_API_KEY must be present in ~/near-build/.env.near-ai}"
+# Optional toolchain setup. Defaults to the original maintainer's path; override with
+# HUNCH_TOOLCHAIN_ENV, or put cargo, cargo-near and near on PATH yourself.
+HUNCH_TOOLCHAIN_ENV="${HUNCH_TOOLCHAIN_ENV:-/Volumes/AgentData/near/build/env.sh}"
+if [ -f "$HUNCH_TOOLCHAIN_ENV" ]; then source "$HUNCH_TOOLCHAIN_ENV"; fi
+# NEAR_AI_API_KEY may already be exported, or come from an env file (never committed).
+HUNCH_SECRETS_ENV="${HUNCH_SECRETS_ENV:-$HOME/near-build/.env.near-ai}"
+if [ -f "$HUNCH_SECRETS_ENV" ]; then
+  set -a
+  . "$HUNCH_SECRETS_ENV"
+  set +a
+fi
+: "${NEAR_AI_API_KEY:?export NEAR_AI_API_KEY or set HUNCH_SECRETS_ENV to a file that defines it}"
 SIGN_WITH="${SIGN_WITH:-sign-with-legacy-keychain}"
 NETWORK="${NETWORK:-testnet}"
 SUFFIX="$(date -u +%y%m%d%H%M%S)-$$"
@@ -54,20 +61,26 @@ node scripts/generate-pages.mjs "$CONTRACT" web/generated-pages.json
 node scripts/attest-proof.mjs web/attestation-proof.json
 node scripts/prepare-resolution.mjs "$CONTRACT" "$FACT_ID" "$TMP/resolution.json"
 outcome="$(jq -r .outcome "$TMP/resolution.json")"
-before_yes="$(node scripts/chain.mjs balance "$YES_ACCOUNT")"
-winner="$YES_ACCOUNT"
-before_no="$(node scripts/chain.mjs balance "$NO_ACCOUNT")"
-if [ "$outcome" = 'No' ]; then winner="$NO_ACCOUNT"; fi
-before="$before_yes"
-if [ "$winner" = "$NO_ACCOUNT" ]; then before="$before_no"; fi
+# Yes/No pays the winning side; Insufficient voids the market and refunds both stakers.
+case "$outcome" in
+  Yes) claimers=("$YES_ACCOUNT"); expected=Yes ;;
+  No) claimers=("$NO_ACCOUNT"); expected=No ;;
+  Insufficient) claimers=("$YES_ACCOUNT" "$NO_ACCOUNT"); expected=Void ;;
+  *) echo "unexpected outcome $outcome" >&2; exit 1 ;;
+esac
 near contract call-function as-transaction "$CONTRACT" resolve file-args "$TMP/resolution.json" prepaid-gas '120 Tgas' attached-deposit '0 NEAR' sign-as "$ARBITER" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/resolve.log"
 resolution_tx="$(grep -oE 'Transaction ID: [A-Za-z0-9]+' "$TMP/resolve.log" | tail -1 | awk '{print $3}')"
 [ -n "$resolution_tx" ] || { echo 'resolution transaction id missing' >&2; exit 1; }
 resolved="$(node scripts/chain.mjs resolved "$CONTRACT" "$FACT_ID" 180)"
-[ "$resolved" = "$outcome" ] || { echo "resolved outcome $resolved differs from signed outcome $outcome" >&2; exit 1; }
-near contract call-function as-transaction "$CONTRACT" claim json-args "$(jq -cn --arg id "$FACT_ID" '{id:$id}')" prepaid-gas '50 Tgas' attached-deposit '0 NEAR' sign-as "$winner" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/claim.log"
-claim_tx="$(grep -oE 'Transaction ID: [A-Za-z0-9]+' "$TMP/claim.log" | tail -1 | awk '{print $3}')"
-[ -n "$claim_tx" ] || { echo 'claim transaction id missing' >&2; exit 1; }
-after="$(node scripts/chain.mjs wait-balance "$winner" "$before")"
-[ "$after" -gt "$before" ] || { echo 'winner balance did not increase after claim' >&2; exit 1; }
-printf 'RESOLVED %s\nCLAIMED %s %s\nCONTRACT %s\n' "$resolution_tx" "$winner" "$claim_tx" "$CONTRACT"
+[ "$resolved" = "$expected" ] || { echo "contract settled as $resolved, expected $expected for signed outcome $outcome" >&2; exit 1; }
+# Yes/No: the winner claims winnings. Insufficient (Void): both stakers claim refunds.
+for claimer in "${claimers[@]}"; do
+  before="$(node scripts/chain.mjs balance "$claimer")"
+  near contract call-function as-transaction "$CONTRACT" claim json-args "$(jq -cn --arg id "$FACT_ID" '{id:$id}')" prepaid-gas '50 Tgas' attached-deposit '0 NEAR' sign-as "$claimer" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/claim.log"
+  claim_tx="$(grep -oE 'Transaction ID: [A-Za-z0-9]+' "$TMP/claim.log" | tail -1 | awk '{print $3}')"
+  [ -n "$claim_tx" ] || { echo "claim transaction id missing for $claimer" >&2; exit 1; }
+  after="$(node scripts/chain.mjs wait-balance "$claimer" "$before")"
+  [ "$after" -gt "$before" ] || { echo "$claimer balance did not increase after claim" >&2; exit 1; }
+  printf 'CLAIMED %s %s\n' "$claimer" "$claim_tx"
+done
+printf 'RESOLVED %s\nSETTLED %s\nCONTRACT %s\n' "$resolution_tx" "$resolved" "$CONTRACT"
