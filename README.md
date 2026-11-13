@@ -1,6 +1,4 @@
-# Truthpage
-
-Truthpage gives contested claims a public NEAR market. Readers inspect the sources and live YES or NO stake, then follow the evidence used to settle the claim.
+Hunch gives contested claims a public NEAR market where readers inspect sources, live YES or NO stakes, and the evidence used to settle each claim.
 
 The contract records each claim, its source URLs, both stake pools, and each account's position. Odds are the share of NEAR in each pool. A NEAR AI Cloud answer can resolve a market only after the contract asks Sworn's on-chain registry to verify the registered model key and the signature over that exact request and response. Winners claim a pro rata share of the pools.
 
@@ -14,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Enter a deployed Truthpage contract account to read its markets. The three seeded claim records and their sources are in [`web/facts.json`](web/facts.json).
+Enter a deployed Hunch contract account to read its markets. The three seeded claim records and their sources are in [`web/facts.json`](web/facts.json).
 
 ## Evidence
 

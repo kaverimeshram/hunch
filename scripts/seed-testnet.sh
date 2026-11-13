@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-: "${CONTRACT:?deployed Truthpage contract account required}"
+: "${CONTRACT:?deployed Hunch contract account required}"
 : "${SIGNER:?account that created the contract and holds its key required}"
 SIGN_WITH="${SIGN_WITH:-sign-with-legacy-keychain}"
 NETWORK="${NETWORK:-testnet}"

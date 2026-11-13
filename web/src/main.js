@@ -5,7 +5,7 @@ const RPC = 'https://near-testnet.drpc.org';
 const facts = await fetch('/facts.json').then((r) => r.json());
 const generatedPages = await fetch('/generated-pages.json').then((r) => r.ok ? r.json() : {}).catch(() => ({}));
 const query = new URLSearchParams(location.search);
-const contract = query.get('contract') || localStorage.getItem('truthpage-contract') || '';
+const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || '';
 const state = document.querySelector('#page-state');
 const app = document.querySelector('#app');
 const connector = new NearConnector({ network: 'testnet', features: { signAndSendTransaction: true } });
@@ -39,7 +39,7 @@ function yocto(value) {
 async function view(method, args) {
   if (!contract) throw new Error('Enter the deployed contract account first.');
   const argsBase64 = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(args))));
-  const response = await fetch(RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'truthpage', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: argsBase64 } }) });
+  const response = await fetch(RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'hunch', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: argsBase64 } }) });
   if (!response.ok) throw new Error(`NEAR testnet RPC returned ${response.status}.`);
   const result = await response.json();
   if (result.error) throw new Error(result.error.cause?.name || result.error.message || 'NEAR testnet rejected the view call.');
@@ -74,7 +74,7 @@ async function renderList() {
   input.value = contract;
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    localStorage.setItem('truthpage-contract', input.value.trim());
+    localStorage.setItem('hunch-contract', input.value.trim());
     const params = new URLSearchParams(location.search);
     params.set('contract', input.value.trim());
     location.search = params;

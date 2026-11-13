@@ -9,10 +9,10 @@ set +a
 SIGN_WITH="${SIGN_WITH:-sign-with-legacy-keychain}"
 NETWORK="${NETWORK:-testnet}"
 SUFFIX="$(date -u +%y%m%d%H%M%S)-$$"
-CONTRACT="truthpage-c-$SUFFIX.testnet"
-ARBITER="truthpage-a-$SUFFIX.testnet"
-YES_ACCOUNT="truthpage-y-$SUFFIX.testnet"
-NO_ACCOUNT="truthpage-n-$SUFFIX.testnet"
+CONTRACT="hunch-c-$SUFFIX.testnet"
+ARBITER="hunch-a-$SUFFIX.testnet"
+YES_ACCOUNT="hunch-y-$SUFFIX.testnet"
+NO_ACCOUNT="hunch-n-$SUFFIX.testnet"
 FACT_ID="adam-back-satoshi"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -29,7 +29,7 @@ create_account "$ARBITER"
 create_account "$YES_ACCOUNT"
 create_account "$NO_ACCOUNT"
 cargo near build non-reproducible-wasm --manifest-path contract/Cargo.toml --out-dir target-wasm >/dev/null
-near contract deploy "$CONTRACT" use-file target-wasm/truthpage_contract.wasm with-init-call new json-args "$(jq -cn --arg arbiter "$ARBITER" '{arbiter:$arbiter,registry:"sworn-reg7-1113.testnet",model_id:"Qwen/Qwen3.6-35B-A3B-FP8"}')" prepaid-gas '80 Tgas' attached-deposit '0 NEAR' network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/deploy.log"
+near contract deploy "$CONTRACT" use-file target-wasm/hunch_contract.wasm with-init-call new json-args "$(jq -cn --arg arbiter "$ARBITER" '{arbiter:$arbiter,registry:"sworn-reg7-1113.testnet",model_id:"Qwen/Qwen3.6-35B-A3B-FP8"}')" prepaid-gas '80 Tgas' attached-deposit '0 NEAR' network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/deploy.log"
 echo "DEPLOYED $CONTRACT"
 CONTRACT="$CONTRACT" SIGNER="$CONTRACT" FAST_RESOLVE=1 SIGN_WITH="$SIGN_WITH" NETWORK="$NETWORK" bash scripts/seed-testnet.sh
 near contract call-function as-transaction "$CONTRACT" stake json-args "$(jq -cn --arg id "$FACT_ID" '{id:$id,side:"Yes"}')" prepaid-gas '40 Tgas' attached-deposit '0.1 NEAR' sign-as "$YES_ACCOUNT" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/yes.log"

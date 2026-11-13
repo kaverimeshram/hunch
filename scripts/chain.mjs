@@ -1,8 +1,8 @@
 const [command, contract, idOrAccount, timeoutArg] = process.argv.slice(2);
-const rpc = process.env.TRUTHPAGE_RPC || 'https://near-testnet.drpc.org';
+const rpc = process.env.HUNCH_RPC || process.env.TRUTHPAGE_RPC || 'https://near-testnet.drpc.org';
 
 async function query(params) {
-  const response = await fetch(rpc, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'truthpage', method: 'query', params }), signal: AbortSignal.timeout(15_000) });
+  const response = await fetch(rpc, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'hunch', method: 'query', params }), signal: AbortSignal.timeout(15_000) });
   const result = await response.json();
   if (!response.ok || result.error) throw new Error('NEAR testnet RPC query failed');
   return result.result;
