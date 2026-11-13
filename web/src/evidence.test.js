@@ -75,3 +75,51 @@ test('rendering shows honest labels and useful empty states', () => {
   const empty = renderEvidenceRoom(fact([]));
   assert.match(empty, /No sources have been attached to this claim yet\./);
 });
+
+import { evidenceFromChain, validateEvidenceInput, canonicalEvidenceUrl } from './evidence.js';
+
+test('submitted evidence from the contract keeps stance, note, contributor and review', () => {
+  const [item] = evidenceFromChain('claim-1', [{ evidence_id: 0, url: 'https://news.example.org/a', stance: 'Contradicting', note: 'Denial.', submitted_by: 'carol.testnet', submitted_at: 1_700_000_000_000, review_status: 'Reviewed', reviewed_by: 'curator.testnet' }]);
+  assert.deepEqual(
+    [item.stance, item.review_status, item.description, item.submitted_by, item.submitted_at, item.reviewed_by, item.origin],
+    ['CONTRADICTING', 'REVIEWED', 'Denial.', 'carol.testnet', 1_700_000_000_000, 'curator.testnet', 'submitted'],
+  );
+  assert.deepEqual(evidenceFromChain('x', null), []);
+  assert.equal(evidenceFromChain('x', [{ url: 'http://bad' }]).length, 0);
+});
+
+test('canonical URLs match the contract normalisation', () => {
+  assert.equal(canonicalEvidenceUrl('HTTPS://News.Example.org/Story?x=1#top'), 'https://news.example.org/Story?x=1');
+  assert.equal(canonicalEvidenceUrl('https://example.com'), 'https://example.com/');
+  assert.equal(canonicalEvidenceUrl('https://localhost/a'), null);
+  assert.equal(canonicalEvidenceUrl(`https://example.com/${'a'.repeat(600)}`), null);
+});
+
+test('evidence form validation gives clear errors before the wallet is asked to sign', () => {
+  const ok = validateEvidenceInput({ url: 'https://news.example.org/a#x', stance: 'SUPPORTING', note: '  line one\nline two ' });
+  assert.deepEqual(ok.value, { url: 'https://news.example.org/a', stance: 'Supporting', note: 'line one line two' });
+  assert.equal(validateEvidenceInput({ url: 'https://news.example.org/a', stance: 'CONTEXT', note: '' }).value.note, null);
+  assert.match(validateEvidenceInput({ url: 'http://x.org', stance: 'SUPPORTING' }).error, /https/);
+  assert.match(validateEvidenceInput({ url: 'https://a.org/b', stance: 'SUPPORTING' }, ['https://a.org/b']).error, /already listed/);
+  assert.match(validateEvidenceInput({ url: 'https://a.org/b', stance: '' }).error, /Choose/);
+  assert.match(validateEvidenceInput({ url: 'https://a.org/b', stance: 'VERIFIED' }).error, /Choose/);
+  assert.match(validateEvidenceInput({ url: 'https://a.org/b', stance: 'CONTEXT', note: 'é'.repeat(141) }).error, /280 bytes/);
+});
+
+test('rendering merges submitted evidence and shows the form only when allowed', () => {
+  const fact = { id: 'f', creator: 'alice.testnet', sources: ['https://a.com/x'] };
+  const submitted = evidenceFromChain('f', [
+    { evidence_id: 0, url: 'https://b.com/y', stance: 'Supporting', note: '<b>bold</b>', submitted_by: 'carol.testnet', submitted_at: 1, review_status: 'Pending' },
+    { evidence_id: 1, url: 'https://a.com/x', stance: 'Contradicting', submitted_by: 'dave.testnet', submitted_at: 2, review_status: 'Pending' },
+  ]);
+  const open = renderEvidenceRoom(fact, { submitted, form: { open: true, connected: false, depositLabel: '0.01 NEAR' } });
+  assert.match(open, /<dt>Supporting<\/dt><dd>1<\/dd>/);
+  assert.match(open, /<dt>Unclassified<\/dt><dd>1<\/dd>/, 'duplicate of a creator source is not counted twice');
+  assert.ok(open.includes('&lt;b&gt;bold&lt;/b&gt;'), 'notes are escaped');
+  assert.match(open, /id="evidence-form"/);
+  assert.match(open, /Connect wallet and submit/);
+  const closed = renderEvidenceRoom(fact, { submitted, form: { open: false, closedReason: 'Closed at deadline.' } });
+  assert.ok(!closed.includes('evidence-form"'));
+  assert.match(closed, /Closed at deadline\./);
+  assert.ok(!renderEvidenceRoom(fact).includes('evidence-form'), 'no form for contracts without evidence support');
+});

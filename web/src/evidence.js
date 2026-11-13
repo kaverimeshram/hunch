@@ -9,10 +9,10 @@ import { escapeHTML } from './html.js';
  * Neither one says the claim, or the source, is true. Nothing here ever labels a
  * source "verified".
  *
- * Today the contract stores each claim's sources as bare https URLs added by the
- * claim's creator (Fact.sources). Those become UNCLASSIFIED, PENDING items. The
- * record shape below already matches the planned on-chain evidence model, so
- * submitted evidence can flow through normalizeEvidence() unchanged later.
+ * Two on-chain inputs feed the room:
+ *   Fact.sources      - bare https URLs added by the claim creator (UNCLASSIFIED, PENDING)
+ *   get_evidence()    - community submissions with stance, note, contributor and review
+ * Both pass through normalizeEvidence(), which treats every field as untrusted.
  */
 
 export const STANCE_ORDER = Object.freeze(['SUPPORTING', 'CONTRADICTING', 'CONTEXT', 'UNCLASSIFIED']);
@@ -89,6 +89,7 @@ export function normalizeEvidence(raw) {
     content_hash: typeof raw.content_hash === 'string' && /^[0-9a-f]{64}$/.test(raw.content_hash) ? raw.content_hash : null,
     submitted_by: cleanText(raw.submitted_by, 64),
     submitted_at: cleanTimestamp(raw.submitted_at),
+    reviewed_by: cleanText(raw.reviewed_by, 64),
     stance: Object.hasOwn(STANCES, raw.stance) ? raw.stance : 'UNCLASSIFIED',
     review_status: Object.hasOwn(REVIEW_STATUSES, raw.review_status) ? raw.review_status : 'PENDING',
     origin: raw.origin === 'contract-source' ? 'contract-source' : 'submitted',
@@ -113,6 +114,55 @@ export function evidenceFromFact(fact) {
     items.push(item);
   });
   return items;
+}
+
+// Contract enum names <-> display keys.
+export const CONTRACT_STANCE = Object.freeze({ SUPPORTING: 'Supporting', CONTRADICTING: 'Contradicting', CONTEXT: 'Context', UNCLASSIFIED: 'Unclassified' });
+const FROM_CONTRACT_STANCE = Object.fromEntries(Object.entries(CONTRACT_STANCE).map(([key, value]) => [value, key]));
+const FROM_CONTRACT_REVIEW = Object.freeze({ Pending: 'PENDING', Reviewed: 'REVIEWED', Rejected: 'REJECTED' });
+
+/** Evidence items from the contract's get_evidence view. Invalid entries are dropped. */
+export function evidenceFromChain(factId, items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((raw) => normalizeEvidence({
+    evidence_id: `${factId}:evidence:${raw?.evidence_id}`,
+    fact_id: factId,
+    url: raw?.url,
+    stance: FROM_CONTRACT_STANCE[raw?.stance],
+    review_status: FROM_CONTRACT_REVIEW[raw?.review_status],
+    description: raw?.note,
+    submitted_by: raw?.submitted_by,
+    submitted_at: raw?.submitted_at,
+    reviewed_by: raw?.reviewed_by,
+    origin: 'submitted',
+  })).filter(Boolean);
+}
+
+/**
+ * Canonical form of a submitted URL, matching the contract's normalisation: https,
+ * lowercase host with a dot, no credentials, no fragment, at most 512 bytes.
+ */
+export function canonicalEvidenceUrl(raw) {
+  const url = parseSourceUrl(raw);
+  if (!url || !url.hostname.includes('.') || /^[.-]/.test(url.hostname)) return null;
+  url.hash = '';
+  return new TextEncoder().encode(url.href).length <= 512 ? url.href : null;
+}
+
+/**
+ * Validate the evidence form before asking the wallet to sign, using the same limits as
+ * the contract so users see a clear message instead of a failed transaction.
+ * Returns { value: { url, stance, note } } with contract-ready values, or { error }.
+ */
+export function validateEvidenceInput({ url, stance, note }, existingUrls = []) {
+  const canonical = canonicalEvidenceUrl(url);
+  if (!canonical) return { error: 'Enter a full https:// link to the source, up to 512 characters.' };
+  if (existingUrls.includes(canonical)) return { error: 'This source is already listed for this claim.' };
+  if (!Object.hasOwn(CONTRACT_STANCE, stance)) return { error: 'Choose how this source relates to the claim.' };
+  const text = typeof note === 'string' ? note.replace(/\s+/g, ' ').trim() : '';
+  if (new TextEncoder().encode(text).length > 280) return { error: 'Keep the note to 280 bytes or fewer.' };
+  if (/[\u0000-\u001f\u007f-\u009f]/.test(text)) return { error: 'Remove control characters from the note.' };
+  return { value: { url: canonical, stance: CONTRACT_STANCE[stance], note: text || null } };
 }
 
 /** Group items by stance, always returning every stance key in display order. */
@@ -143,12 +193,12 @@ function itemMarkup(item) {
     item.published_at ? metaRow('Published', escapeHTML(formatDate(item.published_at))) : '',
     metaRow('Added by', contributor),
     metaRow('Added', item.submitted_at ? escapeHTML(formatDate(item.submitted_at)) : 'Not recorded'),
-    metaRow('Review', `<span class="review-badge" data-status="${escapeHTML(item.review_status)}" title="${escapeHTML(review.hint)}">${escapeHTML(review.label)}</span>`),
+    metaRow('Review', `<span class="review-badge" data-status="${escapeHTML(item.review_status)}" title="${escapeHTML(review.hint)}">${escapeHTML(review.label)}</span>${item.reviewed_by ? ` by ${escapeHTML(item.reviewed_by)}` : ''}`),
   ].join('');
   return `<li class="evidence-item">
     <a class="evidence-link" href="${escapeHTML(item.url)}" target="_blank" rel="noopener noreferrer"><span>${escapeHTML(heading)}</span><span class="arrow" aria-hidden="true">↗</span></a>
     ${subline ? `<p class="evidence-path">${escapeHTML(subline)}</p>` : ''}
-    ${item.description ? `<p class="evidence-description">${escapeHTML(item.description)}</p>` : ''}
+    ${item.description ? `<p class="evidence-description"><span class="evidence-note-label">Submitter's note</span> ${escapeHTML(item.description)}</p>` : ''}
     <dl class="evidence-meta">${rows}</dl>
   </li>`;
 }
@@ -162,15 +212,41 @@ function groupMarkup(stance, items) {
   </section>`;
 }
 
-/** HTML for the Evidence Room section of a fact page. All dynamic values are escaped. */
-export function renderEvidenceRoom(fact) {
-  const items = evidenceFromFact(fact);
+function formMarkup(form) {
+  if (!form.open) return `<p class="evidence-note evidence-closed">${escapeHTML(form.closedReason || 'Evidence submission is closed for this claim.')}</p>`;
+  const choices = STANCE_ORDER.map((stance) => `<label class="stance-choice"><input type="radio" name="stance" value="${stance}" required /> ${escapeHTML(STANCES[stance].label)}</label>`).join('');
+  return `<form id="evidence-form" class="evidence-form" novalidate>
+    <h3>Add a source</h3>
+    <label for="evidence-url">Link to the source</label>
+    <input id="evidence-url" name="url" type="url" inputmode="url" autocomplete="off" placeholder="https://" maxlength="512" required />
+    <fieldset><legend>How does it relate to the claim?</legend><div class="stance-choices">${choices}</div></fieldset>
+    <label for="evidence-note">Note <span class="optional">optional, up to 280 characters</span></label>
+    <textarea id="evidence-note" name="note" rows="3" maxlength="280"></textarea>
+    <p class="field-help">Your wallet signs a NEAR testnet transaction with a ${escapeHTML(form.depositLabel || '0.01 NEAR')} storage deposit. Your account and the time are recorded with the source. Adding a source does not verify it.</p>
+    <div class="form-actions"><button type="submit">${form.connected ? 'Submit source' : 'Connect wallet and submit'}</button></div>
+    <p class="form-error" id="evidence-error" role="alert"></p>
+  </form>`;
+}
+
+/**
+ * HTML for the Evidence Room section of a fact page. All dynamic values are escaped.
+ * options.submitted: normalised items from evidenceFromChain()
+ * options.form: null to hide, or { open, closedReason, connected, depositLabel }
+ */
+export function renderEvidenceRoom(fact, { submitted = [], form = null } = {}) {
+  const creatorItems = evidenceFromFact(fact);
+  const seen = new Set(creatorItems.map((item) => item.url));
+  const items = [...creatorItems];
+  for (const item of submitted) {
+    if (seen.has(item.url)) continue;
+    seen.add(item.url);
+    items.push(item);
+  }
   const groups = groupByStance(items);
   const rawCount = Array.isArray(fact?.sources) ? fact.sources.length : 0;
-  const skipped = rawCount - items.length;
+  const skipped = rawCount - creatorItems.length;
   // Context is optional in the layout: shown only when something is classified as context.
   const visible = STANCE_ORDER.filter((stance) => stance !== 'CONTEXT' || groups.CONTEXT.length);
-  const allFromContract = items.length > 0 && items.every((item) => item.origin === 'contract-source');
 
   return `<section class="evidence-room" aria-labelledby="evidence-title">
     <p class="kicker">Evidence room</p>
@@ -181,6 +257,7 @@ export function renderEvidenceRoom(fact) {
       ? visible.map((stance) => groupMarkup(stance, groups[stance])).join('')
       : '<p class="evidence-empty evidence-empty-all">No sources have been attached to this claim yet.</p>'}
     ${skipped > 0 ? `<p class="evidence-note">Not shown: ${skipped} source ${skipped === 1 ? 'entry' : 'entries'} that ${skipped === 1 ? 'is' : 'are'} not a valid https URL or ${skipped === 1 ? 'repeats' : 'repeat'} another source.</p>` : ''}
-    ${allFromContract ? '<p class="evidence-note">These sources were attached by the claim creator and are stored on-chain as URLs only, so they have no classification yet. Titles and publishers are not shown because they have not been fetched or checked.</p>' : ''}
+    ${creatorItems.length ? '<p class="evidence-note">Sources from the claim creator are stored on-chain as URLs only, so they have no classification. Titles and publishers are not shown because they have not been fetched or checked.</p>' : ''}
+    ${form ? formMarkup(form) : ''}
   </section>`;
 }
