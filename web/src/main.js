@@ -14,7 +14,9 @@ const indexedFacts = await fetch('/facts.json').then((r) => (r.ok ? r.json() : [
 const generatedPages = await fetch('/generated-pages.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
 const attestationProof = await fetch('/attestation-proof.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 const query = new URLSearchParams(location.search);
-const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || '';
+// Contract to read: ?contract=..., then the visitor's last choice, then the deployment default
+// (VITE_HUNCH_CONTRACT, set at build time, e.g. in Vercel's environment variables).
+const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || import.meta.env.VITE_HUNCH_CONTRACT || '';
 const state = document.querySelector('#page-state');
 const app = document.querySelector('#app');
 const walletButton = document.querySelector('#wallet-button');
