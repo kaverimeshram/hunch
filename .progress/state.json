@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "project": {
+    "name": "truthpage",
+    "created": "2026-11-13T14:01:29+00:00"
+  },
+  "features": [
+    {
+      "id": "truthpage",
+      "title": "Truthpage: fact markets with attested AI arbiter",
+      "priority": "high",
+      "tags": [],
+      "product": true,
+      "product_gate": {
+        "user": "reader checking a contested fact (exploit attribution, launch date, crypto claim)",
+        "buyer": "research desk or media outlet wanting fact pages backed by stake, not curators",
+        "job": "know the current best answer to a disputed fact and back it with a stake",
+        "verb": "trade and settle: stake yes/no on a fact; attested AI arbiter resolves; page text follows odds",
+        "wedge": "Illia's wishlist item 1, zero entries in the field",
+        "direct_alternative": "Wikipedia/Grokipedia (no stake), Polymarket (market, no page, human UMA resolution)",
+        "new_capability": "page text written by NEAR AI from live odds; resolution reasoning attested in a TEE and verified on chain via Sworn",
+        "kill_shot": "If no outsider stakes on a page and it reads no better than a Wikipedia stub, KILL",
+        "evidence": [
+          "https://x.com/ilblackdragon/status/2118027843980366222",
+          "reply by @NaoXprotocol in that thread asks for an auditable AI arbiter",
+          "reply by @mitansh_j07: the idea I'd build first",
+          "field 0 of 818 in comp/2026-11-13/projects.json"
+        ],
+        "decision": "pass",
+        "updated": "2026-11-13T14:02:46+00:00"
+      },
+      "blocked": null,
+      "notes": [],
+      "criteria": [
+        {
+          "kind": "auto",
+          "name": "unit",
+          "cmd": "bash scripts/test.sh",
+          "last_run": "2026-11-13T14:04:18+00:00",
+          "last_exit": 127,
+          "duration_ms": 37,
+          "output_tail": "bash: scripts/test.sh: No such file or directory"
+        },
+        {
+          "kind": "auto",
+          "name": "live",
+          "cmd": "bash scripts/live-e2e.sh | grep -q RESOLVED",
+          "last_run": "2026-11-13T14:04:18+00:00",
+          "last_exit": 1,
+          "duration_ms": 106,
+          "output_tail": "bash: scripts/live-e2e.sh: No such file or directory"
+        }
+      ]
+    }
+  ],
+  "customers": [],
+  "history": [
+    {
+      "ts": "2026-11-13T14:04:18+00:00",
+      "checked": 1,
+      "failed_criteria": 2
+    }
+  ],
+  "updated": "2026-11-13T14:04:18+00:00"
+}
