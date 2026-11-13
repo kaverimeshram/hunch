@@ -212,6 +212,32 @@ function groupMarkup(stance, items) {
   </section>`;
 }
 
+/** Creator sources first, then submitted evidence, without duplicate URLs. */
+export function allEvidence(fact, submitted = []) {
+  const items = evidenceFromFact(fact);
+  const seen = new Set(items.map((item) => item.url));
+  for (const item of submitted) {
+    if (seen.has(item.url)) continue;
+    seen.add(item.url);
+    items.push(item);
+  }
+  return items;
+}
+
+/**
+ * One-line evidence overview for the top of a fact page, so readers meet the evidence
+ * before the market. Links down to the Evidence Room.
+ */
+export function evidenceSummaryMarkup(fact, submitted = []) {
+  const groups = groupByStance(allEvidence(fact, submitted));
+  const total = STANCE_ORDER.reduce((sum, stance) => sum + groups[stance].length, 0);
+  if (!total) return '<p class="evidence-glance">No evidence yet · <a href="#evidence-title">Add a source ↓</a></p>';
+  const parts = STANCE_ORDER
+    .filter((stance) => stance !== 'CONTEXT' || groups.CONTEXT.length)
+    .map((stance) => `${groups[stance].length} ${STANCES[stance].label.toLowerCase()}`);
+  return `<p class="evidence-glance"><a href="#evidence-title">Evidence ↓</a> ${escapeHTML(parts.join(' · '))}</p>`;
+}
+
 function formMarkup(form) {
   if (!form.open) return `<p class="evidence-note evidence-closed">${escapeHTML(form.closedReason || 'Evidence submission is closed for this claim.')}</p>`;
   const choices = STANCE_ORDER.map((stance) => `<label class="stance-choice"><input type="radio" name="stance" value="${stance}" required /> ${escapeHTML(STANCES[stance].label)}</label>`).join('');
@@ -235,13 +261,7 @@ function formMarkup(form) {
  */
 export function renderEvidenceRoom(fact, { submitted = [], form = null } = {}) {
   const creatorItems = evidenceFromFact(fact);
-  const seen = new Set(creatorItems.map((item) => item.url));
-  const items = [...creatorItems];
-  for (const item of submitted) {
-    if (seen.has(item.url)) continue;
-    seen.add(item.url);
-    items.push(item);
-  }
+  const items = allEvidence(fact, submitted);
   const groups = groupByStance(items);
   const rawCount = Array.isArray(fact?.sources) ? fact.sources.length : 0;
   const skipped = rawCount - creatorItems.length;
