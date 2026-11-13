@@ -1,0 +1,11 @@
+{
+  "registry": "sworn-reg7-1113.testnet",
+  "model_id": "Qwen/Qwen3.6-35B-A3B-FP8",
+  "quote_sha256": "57a69cfa12a1091976096d7cfc756a8a5acb41b7c370dc8529a32c88258047ae",
+  "nonce_tx": "9ZV4k32TGQFLxx1RY9ZVAiR7i2boiEfgNJXCREkkHGKz",
+  "attestation_tx": "8uaeLKJHYtFdVAHz3QoN9d68pfabQN1BFKvexEVKVUp",
+  "second_model_attestation_tx": "ArGwpKg1NdQh7b3fUjB5q4o5ZqKdsZSNP5QB5MW3JQ4i",
+  "rejected_quote_tx": "3RMXYbZnPMm88BiLrqNWLFL3Y52xu1LmwncFBSaG9stq",
+  "refusal_reason": "step 2: submitted quote failed Intel DCAP: ISV enclave report signature is invalid",
+  "status": "verified-and-refused"
+}
