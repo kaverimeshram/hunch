@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Contested claims with live NEAR testnet odds and auditable resolution." />
+    <title>Truthpage | Claims in play</title>
+  </head>
+  <body data-page="list">
+    <div id="app" aria-busy="true">
+      <header class="masthead">
+        <a class="wordmark" href="/">Truthpage<span class="mark">.</span></a>
+        <a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener">NEAR testnet</a>
+      </header>
+      <main>
+        <section class="intro">
+          <div>
+            <p class="kicker">Claims under review</p>
+            <h1>What holds up<br />when the stakes are visible?</h1>
+            <p class="lede">Follow a claim, inspect its sources, and see how participants are staking their view.</p>
+          </div>
+          <form id="contract-form" class="contract-form">
+            <label for="contract-id">Truthpage contract</label>
+            <div class="field-row"><input id="contract-id" name="contract" autocomplete="off" placeholder="contract.testnet" required /><button type="submit">Load</button></div>
+            <p class="field-help">Reading is public. A wallet is only needed to stake or claim.</p>
+          </form>
+        </section>
+        <section aria-labelledby="markets-title" class="market-index">
+          <div class="section-heading"><div><p class="kicker">Testnet markets</p><h2 id="markets-title">Open claims</h2></div><p id="market-count" class="quiet"></p></div>
+          <p id="page-state" class="notice" role="status">Enter a contract account to read its live markets.</p>
+          <ol id="market-list" class="market-list"></ol>
+        </section>
+      </main>
+      <footer><span>Odds show the share of NEAR staked on each side.</span><span>Resolution receipts are checked by Sworn.</span></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

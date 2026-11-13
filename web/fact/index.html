@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A claim page with sources, live NEAR odds, stakes and attested resolution." />
+    <title>Truthpage | Fact market</title>
+  </head>
+  <body data-page="fact">
+    <div id="app" aria-busy="true">
+      <header class="masthead">
+        <a class="wordmark" href="/">Truthpage<span class="mark">.</span></a>
+        <a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener">NEAR testnet</a>
+      </header>
+      <main>
+        <p class="breadcrumb"><a href="/">All claims</a> / Fact market</p>
+        <p id="page-state" class="notice" role="status">Loading the live claim.</p>
+        <article id="fact-view" hidden></article>
+      </main>
+      <footer><span>Odds show the share of NEAR staked on each side.</span><span>Resolution receipts are checked by Sworn.</span></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
