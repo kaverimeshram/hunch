@@ -20,7 +20,7 @@ async function call(method, args) {
 }
 
 const prompt = await call('get_arbiter_prompt', { id });
-const request = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, stream: false });
+const request = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, stream: false, chat_template_kwargs: { enable_thinking: false } });
 const completionResponse = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
   method: 'POST',
   headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'x-no-aliasing': 'true' },

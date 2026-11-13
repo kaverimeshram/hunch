@@ -37,7 +37,7 @@ for (const meta of facts) {
   const response = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'x-no-aliasing': 'true' },
-    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 220, stream: false }),
+    body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 400, stream: false, chat_template_kwargs: { enable_thinking: false } }),
     signal: AbortSignal.timeout(45_000),
   });
   if (!response.ok) throw new Error(`NEAR AI Cloud page generation returned ${response.status}`);
