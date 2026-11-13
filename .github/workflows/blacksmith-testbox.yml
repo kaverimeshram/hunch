@@ -1,0 +1,64 @@
+name: Blacksmith Testbox
+
+on:
+  workflow_dispatch:
+    inputs:
+      testbox_id:
+        description: Blacksmith Testbox session ID
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  testbox:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 120
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: useblacksmith/checkout@2b9fe87d796feea153b455ec2f3125b471a7b0e7 # v1.8.2
+        with:
+          persist-credentials: false
+      - uses: useblacksmith/begin-testbox@22ff2ea5697369864347140857d218e42815b33c # v2
+        with:
+          testbox_id: ${{ inputs.testbox_id }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "stable"
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: install 0.22.0 cargo-near (prebuilt release, checksum verified)
+        run: |
+          base=https://github.com/near/cargo-near/releases/download/cargo-near-v0.22.0
+          f=cargo-near-x86_64-unknown-linux-gnu.tar.gz
+          curl -fsSL -O "$base/$f" -O "$base/$f.sha256"
+          sha256sum -c "$f.sha256"
+          tar -xzf "$f" --strip-components=1 -C "$HOME/.cargo/bin" cargo-near-x86_64-unknown-linux-gnu/cargo-near
+          rm "$f" "$f.sha256"
+      - name: Preserve the toolchain environment for testbox commands
+        shell: bash
+        run: |
+          umask 077
+          (
+            path=()
+            IFS=: read -ra entries <<< "$PATH"
+            for entry in "${entries[@]}"; do
+              [[ "$entry" == "$RUNNER_TEMP"* ]] || path+=("$entry")
+            done
+            PATH="$(IFS=:; echo "${path[*]}")"
+            for name in $(compgen -e); do
+              case "$name" in
+                ACTIONS_*|INPUT_*|RUNNER_*|GITHUB_TOKEN|GITHUB_ENV|GITHUB_PATH|GITHUB_OUTPUT|GITHUB_STATE|GITHUB_STEP_SUMMARY|GITHUB_ACTION*|SSH_*|BASH_ENV|ENV|PWD|OLDPWD|SHLVL|*_TOKEN*|*_SECRET*|*_PASSWORD*|*_KEY*|*_CREDENTIAL*)
+                  unset "$name" ;;
+                *) [[ "${!name}" != *"$RUNNER_TEMP"* ]] || unset "$name" ;;
+              esac
+            done
+            export -p
+          ) > ~/.testbox-env
+          sed -i '1i [ -f ~/.testbox-env ] && . ~/.testbox-env' ~/.bashrc
+      - uses: useblacksmith/run-testbox@9b976c32aa3bcbffb348889673585a5deee1b2f3 # v2
