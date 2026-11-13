@@ -269,8 +269,7 @@ export function renderEvidenceRoom(fact, { submitted = [], form = null } = {}) {
   const visible = STANCE_ORDER.filter((stance) => stance !== 'CONTEXT' || groups.CONTEXT.length);
 
   return `<section class="evidence-room" aria-labelledby="evidence-title">
-    <p class="kicker">Evidence room</p>
-    <h2 id="evidence-title">What the sources say</h2>
+    <h2 id="evidence-title">Evidence room</h2>
     <p class="evidence-lede">Sources are grouped by how they relate to the claim. A classification describes a source's position, not whether the claim is true. A review checks the source, not the conclusion.</p>
     <dl class="evidence-summary">${STANCE_ORDER.map((stance) => metaRow(STANCES[stance].label, String(groups[stance].length))).join('')}</dl>
     ${items.length

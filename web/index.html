@@ -3,35 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Contested claims with live NEAR testnet odds and auditable resolution." />
-    <title>Hunch | Claims in play</title>
+    <meta name="theme-color" content="#eef1f6" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" />
+    <meta name="description" content="Stake NEAR on contested claims. An attested AI arbiter settles them and the Sworn registry verifies its quote on chain." />
+    <title>Hunch | Contested claims, priced in NEAR</title>
   </head>
   <body data-page="list">
     <div id="app" aria-busy="true">
-      <header class="masthead">
-        <a class="wordmark" href="/">Hunch<span class="mark">.</span></a>
-        <div class="masthead-actions"><a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener">NEAR testnet</a><button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button></div>
+      <header class="topbar">
+        <div class="topbar-in">
+          <a class="wordmark" href="/">Hunch<span class="mark">.</span></a>
+          <nav class="topnav" aria-label="Primary"><a href="/">Markets</a><a href="/#how">How it resolves</a></nav>
+          <div class="masthead-actions"><a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>NEAR testnet</a><button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button></div>
+        </div>
       </header>
       <main>
-        <section class="intro">
-          <div>
-            <p class="kicker">Claims under review</p>
-            <h1>What holds up<br />when the stakes are visible?</h1>
-            <p class="lede">Follow a claim, inspect its evidence, see where participants stake their view, and check how it was settled.</p>
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-copy">
+            <h1 id="hero-title">Contested claims, priced in NEAR.</h1>
+            <p class="lede">Back YES or NO. An AI arbiter judges the evidence inside a hardware enclave, and the Sworn registry verifies its signed quote on NEAR before a single stake moves.</p>
           </div>
-          <form id="contract-form" class="contract-form">
-            <label for="contract-id">Hunch contract</label>
-            <div class="field-row"><input id="contract-id" name="contract" autocomplete="off" placeholder="contract.testnet" required /><button type="submit">Load</button></div>
-            <p class="field-help">Reading is public. A wallet is only needed to stake or claim.</p>
-          </form>
+          <div id="trust-slot" class="trust-slot"></div>
         </section>
+        <section id="stats" class="stats" aria-label="Market totals"></section>
         <section aria-labelledby="markets-title" class="market-index">
-          <div class="section-heading"><div><p class="kicker">Testnet markets</p><h2 id="markets-title">Claims</h2></div><p id="market-count" class="quiet"></p></div>
-          <p id="page-state" class="notice" role="status">Enter a contract account to read its live markets.</p>
-          <ol id="market-list" class="market-list"></ol>
+          <div class="toolbar">
+            <h2 id="markets-title">Markets</h2>
+            <div id="filters" class="chips" role="group" aria-label="Filter markets by status"></div>
+            <details class="contract-pick"><summary>Contract</summary>
+              <form id="contract-form" class="contract-form">
+                <label for="contract-id">Hunch contract account</label>
+                <div class="field-row"><input id="contract-id" name="contract" autocomplete="off" placeholder="contract.testnet" required /><button type="submit">Load</button></div>
+              </form>
+            </details>
+          </div>
+          <p id="page-state" class="notice" role="status">Reading markets from NEAR testnet.</p>
+          <ul id="market-list" class="grid"></ul>
+        </section>
+        <section id="how" class="how" aria-labelledby="how-title">
+          <h2 id="how-title">How a claim gets settled</h2>
+          <ol class="how-steps">
+            <li><span class="step-n">1</span><h3>Evidence room</h3><p>Anyone adds sources. Each one is grouped as supporting, contradicting, context or unclassified.</p></li>
+            <li><span class="step-n">2</span><h3>Arbiter in an enclave</h3><p>An AI model reads the claim and its evidence inside a TEE and signs its answer.</p></li>
+            <li><span class="step-n">3</span><h3>Quote verified on chain</h3><p>The Sworn registry checks the enclave quote. The market settles only when it passes. A flipped quote is refused.</p></li>
+          </ol>
         </section>
       </main>
-      <footer><span>Odds show the share of NEAR staked on each side.</span><span>Resolution receipts are checked by Sworn. That proves authenticity, not correctness.</span></footer>
+      <footer><span>Odds are the share of NEAR staked on each side.</span><span>Resolution quotes are verified on chain by the Sworn registry.</span></footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

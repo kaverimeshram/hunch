@@ -1,46 +1,37 @@
 # Hunch design notes
 
-Hunch is a research surface for disputed claims, not a trading screen. The design exists to make evidence, market sentiment and the AI verdict easy to read and hard to confuse with each other. These notes describe what `web/src/style.css` implements today.
+Hunch is a prediction market for claims that nobody can settle by consensus. The interface borrows the proven market anatomy (a large chance figure, Yes and No priced in cents, a probability chart, a side trade ticket) and adds what only Hunch has: every resolution is backed by an attested arbiter quote that the Sworn registry verifies on NEAR. `web/src/style.css` implements everything below.
 
 ## Principles
 
-1. **Evidence first.** Every fact page leads with the claim and a one-line evidence summary before the market. The Evidence Room is a full section, not a footnote.
-2. **Keep the three signals apart.** Market sentiment ("26.1% staked on YES"), source classification (Supporting, Contradicting, Context, Unclassified) and the AI verdict each have their own section and wording. Odds are never called a probability; a stance never implies truth.
-3. **Honest labels.** Unknown data is shown as unknown ("Not recorded", "Not reviewed"). Nothing is labelled "verified". Attestation copy always says what it proves (authenticity) and what it does not (correctness).
-4. **Quiet and readable.** White canvas, one accent colour, thin rules instead of cards where possible. No gradients, no decorative illustrations, no colourful AI visuals.
+1. **Price first.** Every card and claim page leads with the YES share as a large figure, with Yes and No buttons priced in cents. Every number comes from the contract or from chain history.
+2. **Trust is a first-class section.** The brass seal marks everything attested. "Quote verified" and "Flipped quote refused" links sit in the home hero, in the claim header and in "How this resolves".
+3. **Real history only.** The chart is a step line over actual stake transactions read from NearBlocks and reconciled to the contract's pools. Each point is a transaction with a link.
+4. **Evidence stays separate from price.** Market share, source stance and the arbiter's verdict each have their own section and wording.
 
-## Colour tokens
+## Tokens
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-ink` | `#0a0b0d` | Headings and primary text |
-| `--color-body` | `#5b616e` | Body copy |
-| `--color-muted` | `#7c828a` | Labels, metadata, help text |
-| `--color-line` | `#dee1e6` | Section rules, borders |
-| `--color-line-soft` | `#eef0f3` | Rules between list items |
-| `--color-canvas` | `#ffffff` | Page background |
-| `--color-soft` | `#f7f7f7` | Forms and highlighted panels |
-| `--color-primary` | `#0052ff` | The single accent: primary buttons, links, focus ring |
-| `--color-up` / `--color-down` | `#05b169` / `#cf202f` | YES / NO pool bars only; `down` also marks errors and rejected sources |
-
-Green and red are reserved for the YES/NO split. They are never used to mean "true" or "false", and never as button backgrounds.
+| `--paper` | `#eef1f6` | Page canvas |
+| `--surface` | `#ffffff` | Cards, ticket, panels |
+| `--ink` / `--body` / `--muted` | `#14171f` / `#3b4150` / `#676c78` | Text tiers |
+| `--line` / `--line-soft` | `#d3d9e4` / `#e4e8f0` | Borders and rules |
+| `--navy` | `#17233d` | Primary controls, resolved chip, chart line |
+| `--brass` | `#7a5200` | The seal: attested badges and proof panels |
+| `--yes` / `--no` | `#0b7a53` / `#b3261e` | YES and NO only: price buttons, side toggle, stake tags, trade button |
 
 ## Type
 
-- System sans-serif for display and body; system monospace for numbers, amounts, account IDs, hashes and small labels.
-- Display headings are large with tight tracking and moderate weight; body copy is 14 to 16 px with a 1.6 line height.
-- All amounts and percentages use tabular figures.
+- Newsreader for claims and section headings, Schibsted Grotesk for interface text, IBM Plex Mono for every number, amount, account and hash (tabular figures).
+- Scale: 11 / 12 / 14 / 15 / 20 / 24 / 38 / 76 px. The chance figure is the largest element on every page.
 
-## Layout and components
+## Layout
 
-- Content column of 760 px for fact pages; 1184 px maximum page width. Phones get a 16 px side gutter and single-column layouts.
-- Radius 4 px everywhere. One subtle shadow, on the market frame only.
-- Buttons: solid primary blue for the main action; white outlined "secondary" buttons for wallet and lesser actions. Minimum touch height 36 to 44 px.
-- Status and review badges are outlined, monochrome text, never filled colour blocks.
+- Home: proof band, totals row, status filters (Open, Awaiting resolution, Resolved, Void), three-column card grid with a stake-history sparkline per card.
+- Claim: header with chance figure and stats, trade ticket pinned to the right on desktop and directly under the header on phones, chart with stake history, How this resolves, Evidence room.
+- Radius 14 px for cards, 9 px for controls. Focus rings are 3 px and visible on every control. Motion respects `prefers-reduced-motion`.
 
-## Content rules
+## Trade ticket
 
-- Market heading: "N% staked on YES", or "No stakes yet".
-- Evidence copy: "classified as supporting", "Submitter's note", "Not reviewed", "Reviewed" (with reviewer), "Rejected".
-- Resolution: "Claim judged true / false", "Insufficient evidence", "Void · stakes refundable".
-- Any AI-written text that is not attested is labelled "not attested".
+Yes and No toggle with live cents, NEAR amount with quick amounts, and a preview that applies the contract's own `payout_for` math to the pools after the stake: YES share after, payout if the chosen side wins, profit. The wallet signs the transaction.
