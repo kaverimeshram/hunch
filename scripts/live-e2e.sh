@@ -44,18 +44,23 @@ near contract call-function as-transaction "$CONTRACT" stake json-args "$(jq -cn
 node scripts/generate-pages.mjs "$CONTRACT" web/generated-pages.json
 node scripts/prepare-resolution.mjs "$CONTRACT" "$FACT_ID" "$TMP/resolution.json"
 outcome="$(jq -r .outcome "$TMP/resolution.json")"
-before_yes="$(node scripts/chain.mjs balance "$YES_ACCOUNT")"
-winner="$YES_ACCOUNT"
-before_no="$(node scripts/chain.mjs balance "$NO_ACCOUNT")"
-if [ "$outcome" = 'No' ]; then winner="$NO_ACCOUNT"; fi
-before="$before_yes"
-if [ "$winner" = "$NO_ACCOUNT" ]; then before="$before_no"; fi
+# Yes/No pays the winning side; Insufficient voids the market and refunds both stakers.
+case "$outcome" in
+  Yes) claimers=("$YES_ACCOUNT"); expected=Yes ;;
+  No) claimers=("$NO_ACCOUNT"); expected=No ;;
+  Insufficient) claimers=("$YES_ACCOUNT" "$NO_ACCOUNT"); expected=Void ;;
+  *) echo "unexpected outcome $outcome" >&2; exit 1 ;;
+esac
 near contract call-function as-transaction "$CONTRACT" resolve file-args "$TMP/resolution.json" prepaid-gas '120 Tgas' attached-deposit '0 NEAR' sign-as "$ARBITER" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/resolve.log"
 resolution_tx="$(grep -oE 'Transaction ID: [A-Za-z0-9]+' "$TMP/resolve.log" | tail -1 | awk '{print $3}')"
 [ -n "$resolution_tx" ] || { echo 'resolution transaction id missing' >&2; exit 1; }
 resolved="$(node scripts/chain.mjs resolved "$CONTRACT" "$FACT_ID" 180)"
-[ "$resolved" = "$outcome" ] || { echo "resolved outcome $resolved differs from signed outcome $outcome" >&2; exit 1; }
-near contract call-function as-transaction "$CONTRACT" claim json-args "$(jq -cn --arg id "$FACT_ID" '{id:$id}')" prepaid-gas '50 Tgas' attached-deposit '0 NEAR' sign-as "$winner" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/claim.log"
-after="$(node scripts/chain.mjs wait-balance "$winner" "$before")"
-[ "$after" -gt "$before" ] || { echo 'winner balance did not increase after claim' >&2; exit 1; }
-printf 'RESOLVED %s\nCLAIMED %s\nCONTRACT %s\n' "$resolution_tx" "$winner" "$CONTRACT"
+[ "$resolved" = "$expected" ] || { echo "contract settled as $resolved, expected $expected for signed outcome $outcome" >&2; exit 1; }
+for claimer in "${claimers[@]}"; do
+  before="$(node scripts/chain.mjs balance "$claimer")"
+  near contract call-function as-transaction "$CONTRACT" claim json-args "$(jq -cn --arg id "$FACT_ID" '{id:$id}')" prepaid-gas '50 Tgas' attached-deposit '0 NEAR' sign-as "$claimer" network-config "$NETWORK" "$SIGN_WITH" send >"$TMP/claim.log"
+  after="$(node scripts/chain.mjs wait-balance "$claimer" "$before")"
+  [ "$after" -gt "$before" ] || { echo "$claimer balance did not increase after claim" >&2; exit 1; }
+  printf 'CLAIMED %s\n' "$claimer"
+done
+printf 'RESOLVED %s\nSETTLED %s\nCONTRACT %s\n' "$resolution_tx" "$resolved" "$CONTRACT"

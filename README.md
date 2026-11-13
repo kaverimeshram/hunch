@@ -2,6 +2,15 @@ Hunch gives contested claims a public NEAR market where readers inspect sources,
 
 The contract records each claim, its source URLs, both stake pools, and each account's position. Odds are the share of NEAR in each pool. A NEAR AI Cloud answer can resolve a market only after the contract asks Sworn's on-chain registry to verify the registered model key and the signature over that exact request and response. Winners claim a pro rata share of the pools.
 
+How a market settles:
+
+- The arbiter prompt contains the claim and its evidence only. It never includes stakes or odds, so market sentiment cannot steer the judgment.
+- The attested answer is `yes`, `no` or `insufficient`. `insufficient`, or an answer for a side nobody staked, voids the market and every staker can claim their own stake back.
+- If no attested resolution arrives within 14 days of the deadline, anyone can call `void_expired` and stakes become refundable. Funds cannot be locked forever.
+- Every settlement is appended to an on-chain resolution history with the attestation hashes, key and signature Sworn verified. Attestation proves the answer came unaltered from the registered model. It does not prove the answer is correct.
+
+Evidence: any account can submit an https source with a stance (Supporting, Contradicting, Context or Unclassified) and an optional note of up to 280 bytes, attaching a 0.01 NEAR storage deposit. URLs are normalised and duplicates refused, with up to 16 submissions per claim until its deadline. A curator appointed by the contract account (`set_curator`) can mark submissions Reviewed or Rejected. Review checks that a source is relevant and genuine, not that it is accurate. Rejected sources stay visible but are left out of the arbiter prompt.
+
 The web app reads a contract account on NEAR testnet without a wallet. A wallet is required only to stake or claim. The fact page shows sources, live odds, each side's stake, generated page text, and the reasoning attached to a verified resolution.
 
 ## Run the reader

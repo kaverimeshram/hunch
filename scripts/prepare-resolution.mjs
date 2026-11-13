@@ -20,7 +20,7 @@ async function call(method, args) {
 }
 
 const prompt = await call('get_arbiter_prompt', { id });
-const request = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 512, stream: false });
+const request = JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 1024, stream: false });
 const completionResponse = await fetch('https://cloud-api.near.ai/v1/chat/completions', {
   method: 'POST',
   headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'x-no-aliasing': 'true' },
@@ -41,11 +41,16 @@ if (receipt.signature_kind !== 'provider_tee' || receipt.signing_algo !== 'ed255
 const requestHash = createHash('sha256').update(request).digest('hex');
 const responseHash = createHash('sha256').update(responseBody).digest('hex');
 if (receipt.text !== `${model}:${requestHash}:${responseHash}`) throw new Error('NEAR AI Cloud receipt does not bind this request and response');
-const answer = JSON.parse(completion.choices?.[0]?.message?.content || 'null');
-if (!['yes', 'no'].includes(answer?.outcome) || typeof answer.reasoning !== 'string' || !answer.reasoning.trim()) throw new Error('attested answer has no valid outcome or reasoning');
+// Same parsing rule as the contract: optional ```json fence, then strict JSON.
+const content = (completion.choices?.[0]?.message?.content || '').trim();
+const unfenced = content.startsWith('```') ? content.replace(/^```(?:json)?/, '').replace(/```$/, '').trim() : content;
+let answer = null;
+try { answer = JSON.parse(unfenced); } catch { /* reported below */ }
+const OUTCOMES = { yes: 'Yes', no: 'No', insufficient: 'Insufficient' };
+if (!OUTCOMES[answer?.outcome] || typeof answer.reasoning !== 'string' || !answer.reasoning.trim()) throw new Error('attested answer has no valid outcome or reasoning');
 await writeFile(output, JSON.stringify({
   id,
-  outcome: answer.outcome === 'yes' ? 'Yes' : 'No',
+  outcome: OUTCOMES[answer.outcome],
   evidence: {
     public_key: receipt.signing_address,
     model_id: model,
