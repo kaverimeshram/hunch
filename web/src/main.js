@@ -1,5 +1,7 @@
 import { NearConnector } from '@hot-labs/near-connect';
 import './style.css';
+import { escapeHTML } from './html.js';
+import { renderEvidenceRoom } from './evidence.js';
 
 const RPC = 'https://near-testnet.drpc.org';
 const facts = await fetch('/facts.json').then((r) => r.json());
@@ -10,10 +12,6 @@ const state = document.querySelector('#page-state');
 const app = document.querySelector('#app');
 const connector = new NearConnector({ network: 'testnet', features: { signAndSendTransaction: true } });
 let accountId = '';
-
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-}
 
 function nearAmount(raw) {
   const value = BigInt(raw || 0);
@@ -127,7 +125,7 @@ async function renderFact() {
       </form>` : ''}
       ${fact.status === 'Resolved' ? `<div class="resolution"><h3>Attested reasoning</h3><p>${escapeHTML(fact.reasoning || 'The signed answer did not include a reasoning field.')}</p><a href="https://testnet.nearblocks.io" target="_blank" rel="noopener">View testnet transactions ↗</a></div>` : ''}
     </section>
-    <section class="sources"><p class="kicker">Source record</p><h2>Read the evidence</h2><ul>${fact.sources.map((raw) => { const url = new URL(raw); if (url.protocol !== 'https:') return ''; return `<li><a href="${escapeHTML(url.href)}" target="_blank" rel="noopener">${escapeHTML(url.hostname)} <span aria-hidden="true">↗</span></a></li>`; }).join('')}</ul></section>`;
+    ${renderEvidenceRoom(fact)}`;
     const form = document.querySelector('#stake-form');
     if (form) form.addEventListener('submit', stake);
     app.setAttribute('aria-busy', 'false');
