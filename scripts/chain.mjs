@@ -24,6 +24,7 @@ if (command === 'balance') {
       const fact = await view(contract, 'get_fact', { id: idOrAccount });
       last = fact?.status || 'missing';
       if (last === 'Resolved') { console.log(fact.outcome); process.exit(0); }
+      if (last === 'Void') { console.log('Void'); process.exit(0); }
       if (last === 'Open') throw new Error('registry refused the attestation');
     } catch (error) {
       if (error.message === 'registry refused the attestation') throw error;
