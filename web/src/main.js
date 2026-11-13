@@ -4,6 +4,7 @@ import './style.css';
 const RPC = 'https://near-testnet.drpc.org';
 const facts = await fetch('/facts.json').then((r) => r.json());
 const generatedPages = await fetch('/generated-pages.json').then((r) => r.ok ? r.json() : {}).catch(() => ({}));
+const attestationProof = await fetch('/attestation-proof.json').then((r) => r.ok ? r.json() : null).catch(() => null);
 const query = new URLSearchParams(location.search);
 const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || '';
 const state = document.querySelector('#page-state');
@@ -68,6 +69,22 @@ function factUrl(id) {
   return `/fact/?${params}`;
 }
 
+function proofMarkup() {
+  const proof = attestationProof;
+  if (proof?.status !== 'verified-and-refused' || !/^[A-Za-z0-9]+$/.test(proof.attestation_tx || '') || !/^[A-Za-z0-9]+$/.test(proof.rejected_quote_tx || '')) return '';
+  const registryUrl = `https://testnet.nearblocks.io/address/${encodeURIComponent(proof.registry)}`;
+  return `<section class="resolution" aria-labelledby="proof-title">
+    <p class="kicker">Sworn registry · ${escapeHTML(proof.model_id)}</p>
+    <h3 id="proof-title">The arbiter quote is checked on chain</h3>
+    <p>Sworn verified the enclave quote for this model. Changing one byte made the registry refuse it.</p>
+    <p>
+      <a href="https://testnet.nearblocks.io/txns/${proof.attestation_tx}" target="_blank" rel="noopener">Quote verified ↗</a>
+      <br /><a href="https://testnet.nearblocks.io/txns/${proof.rejected_quote_tx}" target="_blank" rel="noopener">Flipped quote refused ↗</a>
+      <br /><a href="${registryUrl}" target="_blank" rel="noopener">Registry ${escapeHTML(proof.registry)} ↗</a>
+    </p>
+  </section>`;
+}
+
 async function renderList() {
   const form = document.querySelector('#contract-form');
   const input = form.elements.contract;
@@ -115,6 +132,7 @@ async function renderFact() {
       <h1>${escapeHTML(fact.claim)}</h1>
       <p class="lede">The odds follow NEAR staked on each side. Resolution waits for a provider receipt that the Sworn registry accepts.</p>
     </section>
+    ${proofMarkup()}
     ${generatedText ? `<section class="generated-page"><p class="kicker">NEAR AI Cloud page</p><p>${escapeHTML(generatedText)}</p></section>` : ''}
     <section class="market-frame" aria-labelledby="odds-title">
       <div class="market-title"><div><p class="kicker">Current market</p><h2 id="odds-title">${percent(fact.yes_pool, fact.no_pool)} say yes</h2></div><span class="status">${fact.status}</span></div>
