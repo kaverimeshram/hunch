@@ -36,19 +36,19 @@
           "kind": "auto",
           "name": "unit",
           "cmd": "bash scripts/test.sh",
-          "last_run": "2026-11-13T14:04:18+00:00",
-          "last_exit": 127,
-          "duration_ms": 37,
-          "output_tail": "bash: scripts/test.sh: No such file or directory"
+          "last_run": "2026-11-13T14:46:22+00:00",
+          "last_exit": 1,
+          "duration_ms": 790,
+          "output_tail": "tbx: warmup failed\nError: --id is required"
         },
         {
           "kind": "auto",
           "name": "live",
           "cmd": "bash scripts/live-e2e.sh | grep -q RESOLVED",
-          "last_run": "2026-11-13T14:04:18+00:00",
+          "last_run": "2026-11-13T14:46:22+00:00",
           "last_exit": 1,
-          "duration_ms": 106,
-          "output_tail": "bash: scripts/live-e2e.sh: No such file or directory"
+          "duration_ms": 23,
+          "output_tail": "scripts/live-e2e.sh: line 6: /Users/kamal/near-build/sworn/.env: No such file or directory"
         }
       ]
     }
@@ -59,7 +59,17 @@
       "ts": "2026-11-13T14:04:18+00:00",
       "checked": 1,
       "failed_criteria": 2
+    },
+    {
+      "ts": "2026-11-13T14:07:24+00:00",
+      "checked": 1,
+      "failed_criteria": 2
+    },
+    {
+      "ts": "2026-11-13T14:46:22+00:00",
+      "checked": 1,
+      "failed_criteria": 2
     }
   ],
-  "updated": "2026-11-13T14:04:18+00:00"
+  "updated": "2026-11-13T14:46:22+00:00"
 }

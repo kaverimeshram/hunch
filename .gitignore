@@ -1,4 +1,7 @@
 .env
 .progress/LEDGER.md
 target/
+target-wasm/
 node_modules/
+web/dist/
+.progress/TESTBOX.id
