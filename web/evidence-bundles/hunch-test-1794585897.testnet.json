@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "contract": "hunch-test-1794585897.testnet",
+  "network": "testnet",
+  "generated_at": "2026-11-13T18:11:02.219Z",
+  "generator": "scripts/fetch-evidence.mjs",
+  "note": "Page metadata and excerpts are reported as each page states them and are not verified. text_sha256 fingerprints the extracted text; body_sha256 fingerprints the raw page.",
+  "facts": {
+    "adam-back-satoshi": {
+      "claim": "Adam Back is Satoshi Nakamoto.",
+      "sources": [
+        {
+          "url": "https://www.theblock.co/news/business/2026-04-08-nyt-investigation-suggests-adam-back-may-be-satoshi-nakamoto-396663",
+          "status": "http_error",
+          "fetched_at": "2026-11-13T18:10:40.631Z",
+          "http_status": 403
+        },
+        {
+          "url": "https://techcrunch.com/2026/04/08/british-cryptographer-adam-back-denies-nyt-report-that-he-is-bitcoin-creator-satoshi-nakamoto/",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:42.698Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "British cryptographer Adam Back denies NYT report that he is Bitcoin creator Satoshi Nakamoto | TechCrunch",
+          "site_name": "TechCrunch",
+          "author": "Amanda Silberling",
+          "published_at": "2026-04-08T16:03:21.000Z",
+          "language": "en-us",
+          "excerpt": "In Brief Posted: 9:03 AM PDT · April 8, 2026 Amanda Silberling British cryptographer Adam Back denies NYT report that he is Bitcoin creator Satoshi Nakamoto The identity of Satoshi Nakamoto, the pseudonym of the creator of Bitcoin, remains a long-running mystery. But according to a new investigation published in the New York Times, Satoshi could be Adam Back, a British cryptographer who conducted influential early research about digital assets. Back denies that he is Satoshi. People have been trying to track down the father of Bitcoin for decades, without much success. Based on Back’s denial, it’s not clear if the Times’ tech journalist John Carreyrou, known for his reporting that took down Theranos, got much further than anyone else. Back fits the profile of the kind of person you might suspect would create the first cryptocurrency. He created Hashcash, the proof-of-work system that Satoshi used to mine Bitcoin, and he is now the co-founder and CEO of Blockstream , a company building infrastructure for blockchain-based payment systems. Back even agreed with Carreyrou that he’s a reasonable suspect, and it’s probable that Satoshi is — like him — a fifty-something-year-old British cypherpunk. (In that case, yes, the use of a Japanese moniker is odd.) But Carreyrou doesn’t have any undeniable evidence to seal the case shut. To stake his claim, he collected archives of emails sent in three cryptography listservs between 1992 and 2008, during the time that the pseudonymous…",
+          "text_chars": 3122,
+          "text_sha256": "ccab26c521d99404d2f007796dbca651ac406e52239872feba5528a7a60c36f1",
+          "body_sha256": "ccf33eae367cca135fae71b3a0fd1c685f2b0a0f30735f5a608ac1d3d81bf0d3"
+        },
+        {
+          "url": "https://www.theguardian.com/technology/2026/apr/08/british-computer-scientist-adam-back-denies-he-is-bitcoin-developer-satoshi-nakamoto",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:45.322Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "British computer scientist denies he is bitcoin developer Satoshi Nakamoto",
+          "site_name": "the Guardian",
+          "author": "Aisha Down",
+          "published_at": "2026-04-08T17:35:31.000Z",
+          "language": "en",
+          "excerpt": "This article is more than 7 months old British computer scientist denies he is bitcoin developer Satoshi Nakamoto This article is more than 7 months old New York Times report claims London-born Adam Back is creator of the cryptocurrency after comparing writings A British computer scientist has insisted he is not the elusive developer of bitcoin, after a report claimed to unmask him as its creator. A story in the New York Times details a years-long effort to unmask Satoshi Nakamoto, the mysterious author of the bitcoin white paper which laid the theoretical foundations for modern digital currencies. It names Adam Back, a London-born computer scientist and entrepreneur. In a thread on X , Back promptly denied being the mysterious – and presumably ultra-wealthy – technologist. “I also don’t know who satoshi is, and i think it is good for bitcoin that this is the case, as it helps bitcoin be viewed [as] a new asset class, the mathematically scarce digital commodity,” he wrote. Nakamoto’s true identity has been the subject of speculation for years. Previous attempts to unmask him have pointed to Nick Szabo, a “reclusive” Hungarian-American computer scientist; Hal Finney, a software developer; and an “ unknown Australian genius ” who ended up being a fraud . This time, the trail pointed the journalist to Back, who was a member of an online anarchist cryptography community called the cypherpunks in the early 1990s. John Carreyrou unearthed similarities between Back and Nakamoto by…",
+          "text_chars": 4036,
+          "text_sha256": "61523d0f22b0cdecfa2cd58a987a26c3d5665eb548e6154ba9101109c926d7b7",
+          "body_sha256": "245b24d960d2149d9d64f69f241e0fa778ecc28854d6efd7281a24dd37d81247"
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Adam_Back",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:47.266Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "Adam Back - Wikipedia",
+          "site_name": "Wikimedia Foundation, Inc.",
+          "author": "Contributors to Wikimedia projects",
+          "published_at": "2007-03-29T15:22:54.000Z",
+          "language": "en",
+          "excerpt": "From Wikipedia, the free encyclopedia British cryptographer and cypherpunk (born 1970) Adam Back Back in 2025 Born July 1970 (age 56) London, England, UK Education University of Exeter ( PhD ) Scientific career Fields Cryptographic protocols Electronic cash Privacy-enhancing technologies Distributed systems Workplaces Zero-Knowledge Systems Pi Corporation Blockstream Thesis Parallelization of general purpose programs using optimistic techniques from parallel discrete event simulation (1995) Doctoral advisor Stephen Turner Website cypherspace .org /adam Adam Back (born July 1970) is a British cryptographer and cypherpunk . He is the CEO of Blockstream , which he co-founded in 2014. He invented Hashcash , which is used in the bitcoin mining process. An investigation by The New York Times suggested that he may be Satoshi Nakamoto , the pseudonymous inventor of bitcoin, though Back has denied this claim. Life [ edit ] Back was born in London, England, in July 1970. [ 1 ] His first computer was a Sinclair ZX81 . He taught himself BASIC , and spent his time reverse engineering video games , finding decryption keys in software packages . He completed his A levels in advanced mathematics , physics , and economics . [ citation needed ] He has a computer science PhD in distributed systems from the University of Exeter . [ 2 ] During his PhD, Back worked with compilers to make use of parallel computers in a semi automated way. He became interested in PGP encryption, electronic cash and…",
+          "text_chars": 11712,
+          "text_sha256": "ec6d5e4d93a2a3c6faf4ee33a68cbdedaa8c176233aea6fa9f83c0453dd07baf",
+          "body_sha256": "5ef4a2a740f3e936f2ae156e9835fef90259cd2bfd3ad38d910e78d6e42454fb"
+        }
+      ]
+    },
+    "patoshi-one-million-btc": {
+      "claim": "The Patoshi-pattern miner mined at least 1,000,000 BTC.",
+      "sources": [
+        {
+          "url": "https://bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:50.036Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "The Well Deserved Fortune of Satoshi Nakamoto, Bitcoin creator, Visionary and Genius",
+          "site_name": "Bitslog",
+          "author": null,
+          "published_at": "2013-04-17T06:32:26.000Z",
+          "language": "en",
+          "excerpt": "Words on Bitcoin Design, Privacy, Security and Crypto, by Sergio Demian Lerner Bitslog Home About Blog Index Contributions to Bitcoin and the cryptocurrency field HC Family of Block Cipher modes &laquo; Dos and Don’ts (but mostly Don’ts) for Secure Transport Protocol Designers More on block mining history: 1st half of 2010 &raquo; The Well Deserved Fortune of Satoshi Nakamoto, Bitcoin creator, Visionary and Genius I won’t discuss anything in this post. I’m tired of discussing technical things with people with skewed opinions and monetary interest. I’ve talked enough in the Bitcointalk forum about Satoshi. Some people screamed at me. But a picture is worth a thousand words. And I will show pictures that everyone can replicate. Please forgive me for the awful image design. The graphs were made by a new block chain analysis technique I tested that consist on tracking the ExtraNonce fields in the coinbase field of the coinbase transaction, which is the one that creates bitcoins. As far as I know, is hasn’t been done before. In the following graphs each dot is the creation of 50 BTC. I have only analyzed and printed graphs from block 0 upto block 36288. I wonder what will I get when I process the remaining three years. The extraNonce fields increments every time the nonce fields (which is 32 bits) overflows, so it’s a slow realtime clock, until the application is restarted, in which case it goes back to 1. Note the X-Axis in the graphs is not time (as it’s said on the graph).…",
+          "text_chars": 12073,
+          "text_sha256": "c4435b088063584a2a47d3abc1733679d2363a9cd6c2589ededd9529325d0254",
+          "body_sha256": "720aee428dbf5f80edf36619ee9f93a768d21abd6ea1bff6c497bf0ffbf7c0c1"
+        },
+        {
+          "url": "https://www.theblock.co/news/business/2024-12-03-blackrock-ibit-spot-bitcoin-etf-500000-btc-329190",
+          "status": "http_error",
+          "fetched_at": "2026-11-13T18:10:51.999Z",
+          "http_status": 403
+        },
+        {
+          "url": "https://bitquery.io/investigations/satoshi-nakamoto-net-worth",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:53.140Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "Satoshi Nakamoto Net Worth: A Full On-Chain Audit | Bitquery",
+          "site_name": "Bitquery",
+          "author": "Bitquery Research",
+          "published_at": "2026-09-01T00:00:00.000Z",
+          "language": "en",
+          "excerpt": "On-chain forensics Bitcoin Jan 2009 – Sep 2026 How much bitcoin does Satoshi own, and has any of it moved? Since 2020, 28 coins mined in Bitcoin's first 16 months have woken up, and each time the headlines asked whether the founder was finally spending. The checks that did happen leaned on published lists, and the last published spend count — one line in a 2022 essay — predates every awakening since. We rebuilt the fingerprint behind them from the raw blocks, graded all 54,316 blocks of the era, and followed every coin to 1 September 2026, down to the satoshi. B By Bitquery Research · Blockchain Intelligence On-chain figures verified 1 September 2026 14 min read At a glance Satoshi Nakamoto is believed to have mined about 1.1 million BTC in Bitcoin's first 16 months. The evidence is a fingerprint in the earliest blocks called the Patoshi pattern. We re-derived that fingerprint from the raw blocks without copying anyone's answer key, scored every block by confidence, and then checked every coin it covers against every spend in Bitcoin's history. The fortune has not gone anywhere. The coins that ever left the public Patoshi list add up to 1,550 BTC, about two-thirds of it the miner's own housekeeping in 2009 and 2010, and nothing on that list has moved since December 2017. The 28 early coins that woke up since 2020 and made headlines: none clears the bar we set in advance for calling a coin Satoshi's, and the 3 that come close are labelled, not hidden. 1,023,352 BTC provably…",
+          "text_chars": 22541,
+          "text_sha256": "f45a36c11a24ba11f69c489c6cb5e928f0c10397fe99ddacf4ec4a3b189ec155",
+          "body_sha256": "6c660518127694ec98ad35bfc7694f7cc7aefab95dab0b450cb2d4eed6817848"
+        }
+      ]
+    },
+    "ethereum-flips-bitcoin-2027": {
+      "claim": "Ethereum market capitalization will exceed Bitcoin market capitalization at the UTC close on 31 December 2027.",
+      "sources": [
+        {
+          "url": "https://www.coingecko.com/en/coins/bitcoin/historical_data",
+          "status": "http_error",
+          "fetched_at": "2026-11-13T18:10:57.167Z",
+          "http_status": 403
+        },
+        {
+          "url": "https://www.coingecko.com/en/coins/ethereum/historical_data",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:10:58.380Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "Ethereum Price History: Download ETH Historical Data | CoinGecko",
+          "site_name": "CoinGecko",
+          "author": null,
+          "published_at": null,
+          "language": "en",
+          "excerpt": "Ethereum ETH Price #2 $1,937.47 3.9% 0.02813 BTC 0.3% $1,905.00 24h Range $2,023.15 Get ETH Price on: 1 ETH = $1,937.47 on Nov 13, 2026 No data available for this date Need older prices? Get full ETH price history with the CoinGecko API . Looking for historical crypto data via API? Start free — 10K credits/month, no credit card required. SOC 2 Type II Independently audited 60+ Currencies Historical prices in your local currency Exchange-independent 2,000+ source aggregation Use the data on this page in your own app or model. Get Free API Key Ethereum Price History promote-api-badge#hide keydown@window->promote-api-badge#handleKeydown resize@window->promote-api-badge#position\" > promote-api-badge#hoverShow mouseleave->promote-api-badge#hoverHide\" class=\"tw-hidden tw-fixed tw-inset-0 tw-z-[30000] tw-w-screen tw-h-[100dvh] tw-overflow-y-auto tw-p-5 tw-bg-white dark:tw-bg-moon-800 tw-shadow-sm tw-flex tw-flex-col tw-items-start tw-gap-4 md:tw-absolute md:tw-inset-auto md:tw-left-0 md:tw-top-full md:tw-z-[110] md:tw-mt-2 md:tw-w-[800px] md:tw-h-auto md:tw-max-w-[calc(100vw-2rem)] md:tw-max-h-[calc(100vh-6rem)] md:tw-rounded-xl md:tw-ring-2 md:tw-ring-inset md:tw-ring-gray-200 dark:tw-ring-moon-700\" > Dates are in UTC time. .xls (Excel) .csv Need more than 1y of data? Subscribe to our API to unlock full history. Get Your API Key Date Market Cap Volume Close 2026-11-13 $246,545,898,090 $10,141,971,727 N/A 2026-11-12 $251,186,491,279 $9,205,677,610 $2,017.35 2026-11-11…",
+          "text_chars": 4498,
+          "text_sha256": "0db0d89f70a10bc2e1383fdd0edc05d7773ddae0cc1ab24901eab74b0b9cafce",
+          "body_sha256": "014ddb602429b2474fc803d98269a15e6fa50d0a1672b2475f292678d5f82e26"
+        },
+        {
+          "url": "https://flippening.org/",
+          "status": "ok",
+          "fetched_at": "2026-11-13T18:11:00.243Z",
+          "final_url": null,
+          "http_status": 200,
+          "content_type": "text/html",
+          "title": "The Flippening Tracker: Has Ethereum Flipped Bitcoin?",
+          "site_name": "The Flippening",
+          "author": null,
+          "published_at": "2026-11-13T00:00:00.000Z",
+          "language": "en",
+          "excerpt": "ETH vs BTC: key numbers Ethereum as a percentage of Bitcoin. 100% means Ethereum has caught up. Data as of November 13, 2026 . Metric Now 1 year ago Peak Data since Market cap 17.0% 20.3% 83.2% Jun 12, 2017 Jan 2017 Active addresses (7-day avg) 137.0% 98.8% 182.8% Jan 29, 2026 Jan 2017 Transactions (7-day avg) 406.8% 350.6% 712.8% Jan 19, 2026 Jan 2017 What is the flippening? The flippening is the moment Ethereum (ETH) passes Bitcoin (BTC) in market capitalization and becomes the largest cryptocurrency. This page measures it as Ethereum's market cap divided by Bitcoin's, so the flippening happens when the number at the top reaches 100% . Bitcoin has been the largest cryptocurrency since it launched in 2009. Ethereum followed in July 2015 as a platform for general-purpose smart contracts, the programs behind decentralized finance (DeFi), and has ranked second for most of the time since. That spot has been contested. XRP passed Ethereum several times in late 2017 and 2018. In June 2026 Tether (USDT) reached 99.1% of Ethereum's market cap at the daily close, and press reports had it briefly ahead intraday on June 6 and June 26. Ethereum's closest calls Ethereum came closest on June 12, 2017 , during the token-sale boom, when its market cap reached 83.2% of Bitcoin's. It had been 4.4% on January 1 that year. The next highs were 54.8% on December 8, 2021, during the DeFi and NFT boom, and 53.4% on September 7, 2022. That second peak came a week before the Merge moved Ethereum to…",
+          "text_chars": 4921,
+          "text_sha256": "d8a6499778ccf60aa8fcf5747694eb41ca2632c3c65deb853973d5762bb141bb",
+          "body_sha256": "8717c7d8eccc37de098d226eada880215b817a61867c615808a801c4acb34065"
+        }
+      ]
+    }
+  }
+}
