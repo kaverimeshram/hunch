@@ -12,6 +12,7 @@ const DEFAULT_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
 
 const indexedFacts = await fetch('/facts.json').then((r) => (r.ok ? r.json() : [])).catch(() => []);
 const generatedPages = await fetch('/generated-pages.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+const attestationProof = await fetch('/attestation-proof.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 const query = new URLSearchParams(location.search);
 const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || '';
 const state = document.querySelector('#page-state');
@@ -120,6 +121,23 @@ function formatTime(ms) {
 function shortHash(value) {
   const text = String(value || '');
   return text.length > 20 ? `${text.slice(0, 10)}…${text.slice(-8)}` : text;
+}
+
+/** Proof that the Sworn registry verifies this model's enclave quote and refuses a tampered one (from scripts/attest-proof.mjs). */
+function proofMarkup() {
+  const proof = attestationProof;
+  if (proof?.status !== 'verified-and-refused' || !/^[A-Za-z0-9]+$/.test(proof.attestation_tx || '') || !/^[A-Za-z0-9]+$/.test(proof.rejected_quote_tx || '')) return '';
+  const registryUrl = `${EXPLORER}/address/${encodeURIComponent(proof.registry)}`;
+  return `<section class="resolution" aria-labelledby="proof-title">
+    <p class="kicker">Sworn registry · ${escapeHTML(proof.model_id)}</p>
+    <h3 id="proof-title">The arbiter quote is checked on chain</h3>
+    <p>Sworn verified the enclave quote for this model. Changing one byte made the registry refuse it.</p>
+    <p>
+      <a href="${EXPLORER}/txns/${proof.attestation_tx}" target="_blank" rel="noopener">Quote verified ↗</a>
+      <br /><a href="${EXPLORER}/txns/${proof.rejected_quote_tx}" target="_blank" rel="noopener">Flipped quote refused ↗</a>
+      <br /><a href="${registryUrl}" target="_blank" rel="noopener">Registry ${escapeHTML(proof.registry)} ↗</a>
+    </p>
+  </section>`;
 }
 
 // ---------- Claim list ----------
@@ -255,6 +273,7 @@ async function renderFact() {
       <h1>${escapeHTML(fact.claim)}</h1>
       <p class="lede">The market shows where participants put their NEAR. The resolution comes separately, from an AI arbiter judging the evidence, and is only accepted once its signed answer is verified on-chain.</p>
     </section>
+    ${proofMarkup()}
     ${generatedText ? `<section class="generated-page"><p class="kicker">AI-written summary · not attested</p><p>${escapeHTML(generatedText)}</p></section>` : ''}
     ${resolutionMarkup(fact, history)}
     <section class="market-frame" aria-labelledby="odds-title">
