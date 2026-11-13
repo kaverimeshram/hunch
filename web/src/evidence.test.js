@@ -123,3 +123,19 @@ test('rendering merges submitted evidence and shows the form only when allowed',
   assert.match(closed, /Closed at deadline\./);
   assert.ok(!renderEvidenceRoom(fact).includes('evidence-form'), 'no form for contracts without evidence support');
 });
+
+import { evidenceSummaryMarkup, allEvidence } from './evidence.js';
+
+test('evidence summary for the top of the fact page counts every source once', () => {
+  const fact = { id: 'f', creator: 'alice.testnet', sources: ['https://a.com/x', 'https://b.com/y'] };
+  const submitted = evidenceFromChain('f', [
+    { evidence_id: 0, url: 'https://c.com/z', stance: 'Contradicting', submitted_by: 'carol.testnet', submitted_at: 1, review_status: 'Pending' },
+    { evidence_id: 1, url: 'https://a.com/x', stance: 'Supporting', submitted_by: 'dave.testnet', submitted_at: 2, review_status: 'Pending' },
+  ]);
+  assert.equal(allEvidence(fact, submitted).length, 3);
+  const html = evidenceSummaryMarkup(fact, submitted);
+  assert.match(html, /0 supporting · 1 contradicting · 2 unclassified/);
+  assert.match(html, /href="#evidence-title"/);
+  assert.ok(!html.includes('context'), 'context is only listed when present');
+  assert.match(evidenceSummaryMarkup({ id: 'e', sources: [] }), /No evidence yet/);
+});
