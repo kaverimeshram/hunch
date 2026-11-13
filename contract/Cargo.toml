@@ -16,10 +16,3 @@ uint.workspace = true
 
 [dev-dependencies]
 near-sdk = { workspace = true, features = ["unit-testing", "non-contract-usage"] }
-
-[profile.release]
-codegen-units = 1
-opt-level = "z"
-lto = true
-panic = "abort"
-overflow-checks = true
