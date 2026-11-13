@@ -13,7 +13,7 @@ How a market settles:
 
 Evidence: any account can submit an https source with a stance (Supporting, Contradicting, Context or Unclassified) and an optional note of up to 280 bytes, attaching a 0.01 NEAR storage deposit. URLs are normalised and duplicates refused, with up to 16 submissions per claim until its deadline. A curator appointed by the contract account (`set_curator`) can mark submissions Reviewed or Rejected. Review checks that a source is relevant and genuine, not that it is accurate. Rejected sources stay visible but are left out of the arbiter prompt.
 
-The web app reads a contract account on NEAR testnet without a wallet. A wallet is required only to stake or claim. The fact page shows sources, live odds, each side's stake, generated page text, and the reasoning attached to a verified resolution.
+The web app is a swipe deck. Each claim is one card with the live YES share, a YES/NO bar and the NEAR staked. Swipe right (or press the right arrow) for YES, left for NO, up to skip. A swipe on an open market opens a stake sheet with a payout preview computed from the contract's own payout math, and the wallet signs the stake. Closed markets take a swipe as an opinion and open the evidence room. Tapping a card opens the claim room: sources grouped by stance, the stake history drawn from real transactions, the brass seal's proof links and the reasoning attached to a verified resolution. The deck reads a contract account on NEAR testnet without a wallet; a wallet is needed only to stake or claim.
 
 ## Run the reader
 

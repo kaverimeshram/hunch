@@ -301,7 +301,7 @@ async function confirmStake(fact, side, amount) {
 
 async function submitSheet(event) {
   event.preventDefault();
-  const form = event.currentTarget;
+  const form = event.target;
   if (sheetState.sending) return;
   const errorBox = form.querySelector('#stake-error');
   const submit = form.querySelector('#stake-submit');
