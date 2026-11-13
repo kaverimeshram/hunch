@@ -23,6 +23,10 @@ npm run dev
 
 Enter a deployed Hunch contract account to read its markets. The three seeded claim records and their sources are in [`web/facts.json`](web/facts.json).
 
+## Deploy the reader
+
+`npm run build` in `web/` writes a static site to `web/dist`, including the runtime data files (`facts.json`, and `generated-pages.json` / `attestation-proof.json` when they exist). On Vercel: import the repository, set **Root Directory** to `web`, keep the detected Vite preset (build `npm run build`, output `dist`), and optionally set the environment variable `VITE_HUNCH_CONTRACT` to the testnet contract the site should open by default. Visitors can still choose another contract with `?contract=`.
+
 ## Evidence
 
 - Live verifier account: [sworn-reg7-1113.testnet](https://testnet.nearblocks.io/address/sworn-reg7-1113.testnet)
