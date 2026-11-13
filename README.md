@@ -1,5 +1,7 @@
 Hunch gives contested claims a public NEAR market where readers inspect sources, live YES or NO stakes, and the evidence used to settle each claim.
 
+**Live demo (NEAR testnet):** [hunch-near.vercel.app](https://hunch-near.vercel.app). It reads a test contract and uses testnet NEAR only.
+
 The contract records each claim, its source URLs, both stake pools, and each account's position. Odds are the share of NEAR in each pool. A NEAR AI Cloud answer can resolve a market only after the contract asks Sworn's on-chain registry to verify the registered model key and the signature over that exact request and response. Winners claim a pro rata share of the pools.
 
 How a market settles:
@@ -22,6 +24,10 @@ npm run dev
 ```
 
 Enter a deployed Hunch contract account to read its markets. The three seeded claim records and their sources are in [`web/facts.json`](web/facts.json).
+
+## Deploy the reader
+
+`npm run build` in `web/` writes a static site to `web/dist`, including the runtime data files (`facts.json`, and `generated-pages.json` / `attestation-proof.json` when they exist). The live demo at https://hunch-near.vercel.app is deployed this way. On Vercel: import the repository, set **Root Directory** to `web`, keep the detected Vite preset (build `npm run build`, output `dist`), and optionally set the environment variable `VITE_HUNCH_CONTRACT` to the testnet contract the site should open by default. Visitors can still choose another contract with `?contract=`.
 
 ## Evidence
 
