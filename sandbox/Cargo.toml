@@ -12,6 +12,7 @@ near-workspaces = { version = "0.24.0", features = ["unstable"] }
 near-sdk = { workspace = true, features = ["non-contract-usage"] }
 tokio = { version = "1", features = ["full"] }
 serde_json.workspace = true
+serde.workspace = true
 sha2 = "0.10"
 hex = "0.4"
 
