@@ -39,7 +39,7 @@ export function reconciles(series, fact) {
 
 async function getJson(url) {
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`NearBlocks returned ${response.status}.`);
+  if (!response.ok) throw Object.assign(new Error(`NearBlocks returned ${response.status}.`), { status: response.status });
   return response.json();
 }
 
@@ -66,3 +66,32 @@ export async function fetchStakeHistory(contract, { getJson: get = getJson, stor
   }));
   return details.flat().map((e) => ({ ...e, amount: BigInt(e.amount) }));
 }
+
+const listCacheKey = (contract) => `hunch-stake-history:${contract}`;
+const HISTORY_TTL_MS = 2 * 60 * 1000;
+const inflight = new Map();
+
+/**
+ * Stake history for the detail view. A copy younger than two minutes is reused, concurrent callers
+ * share one fetch, and when NearBlocks refuses (429 or any failure) the last stored copy is returned
+ * with `stale: true`. Chart code still reconciles the events against the contract's pools, so a stale
+ * copy that no longer matches draws nothing. With nothing stored the original error is thrown.
+ */
+export async function cachedStakeHistory(contract, { fetcher = fetchStakeHistory, storage = globalThis.localStorage, now = Date.now() } = {}) {
+  let stored = null;
+  try { stored = JSON.parse(storage?.getItem(listCacheKey(contract)) || 'null'); } catch { stored = null; }
+  const revive = (events) => events.map((e) => ({ ...e, amount: BigInt(e.amount) }));
+  if (stored && now - stored.at < HISTORY_TTL_MS) return { events: revive(stored.events), stale: false };
+  if (!inflight.has(contract)) inflight.set(contract, fetcher(contract).finally(() => inflight.delete(contract)));
+  try {
+    const events = await inflight.get(contract);
+    storage?.setItem(listCacheKey(contract), JSON.stringify({ at: now, events: events.map((e) => ({ ...e, amount: e.amount.toString() })) }));
+    return { events, stale: false };
+  } catch (error) {
+    if (stored) return { events: revive(stored.events), stale: true };
+    throw error;
+  }
+}
+
+/** Drop the stored copy, for example right after the visitor stakes. */
+export const forgetStakeHistory = (contract, storage = globalThis.localStorage) => storage?.removeItem(listCacheKey(contract));

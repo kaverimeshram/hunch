@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { stakeEventsFromTx, seriesFor, reconciles, fetchStakeHistory } from './history.js';
+import { stakeEventsFromTx, seriesFor, reconciles, fetchStakeHistory, cachedStakeHistory } from './history.js';
 
 const NEAR = 10n ** 24n;
 const tx = (hash, id, side, near, ms, status = true) => ({
@@ -42,4 +42,27 @@ test('fetchStakeHistory follows cursors, skips non-stake txs and uses the cache'
   const before = calls.length;
   await fetchStakeHistory(C, { getJson: get, storage });
   assert.equal(calls.length - before, 2, 'second run only re-lists pages; tx details come from cache');
+});
+
+const memory = () => { const m = new Map(); return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) }; };
+const event = { factId: 'f', side: 'Yes', amount: 5n * NEAR, account: 'a.testnet', at: 1, hash: 'h' };
+
+test('cached history is reused inside the ttl and survives a 429 afterwards', async () => {
+  const storage = memory();
+  let calls = 0;
+  const ok = async () => { calls += 1; return [event]; };
+  const rateLimited = async () => { throw Object.assign(new Error('NearBlocks returned 429.'), { status: 429 }); };
+  const first = await cachedStakeHistory('c.testnet', { fetcher: ok, storage, now: 1000 });
+  assert.equal(first.stale, false);
+  assert.equal(first.events[0].amount, 5n * NEAR);
+  await cachedStakeHistory('c.testnet', { fetcher: ok, storage, now: 2000 });
+  assert.equal(calls, 1);
+  const stale = await cachedStakeHistory('c.testnet', { fetcher: rateLimited, storage, now: 1000 + 10 * 60 * 1000 });
+  assert.equal(stale.stale, true);
+  assert.equal(stale.events.length, 1);
+});
+
+test('a 429 with nothing stored is thrown, not hidden', async () => {
+  const rateLimited = async () => { throw Object.assign(new Error('NearBlocks returned 429.'), { status: 429 }); };
+  await assert.rejects(cachedStakeHistory('d.testnet', { fetcher: rateLimited, storage: memory(), now: 1 }), { status: 429 });
 });

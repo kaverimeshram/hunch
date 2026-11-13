@@ -2,56 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#eef1f6" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14120f" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" />
-    <meta name="description" content="Stake NEAR on contested claims. An attested AI arbiter settles them and the Sworn registry verifies its quote on chain." />
-    <title>Hunch | Contested claims, priced in NEAR</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Gloock&family=JetBrains+Mono:wght@400;500;600&display=swap" />
+    <meta name="description" content="Swipe right for YES, left for NO. Stake NEAR on contested claims that an attested AI arbiter settles." />
+    <title>Hunch | Swipe a claim, stake NEAR</title>
   </head>
-  <body data-page="list">
+  <body data-page="deck">
     <div id="app" aria-busy="true">
       <header class="topbar">
-        <div class="topbar-in">
-          <a class="wordmark" href="/">Hunch<span class="mark">.</span></a>
-          <nav class="topnav" aria-label="Primary"><a href="/">Markets</a><a href="/#how">How it resolves</a></nav>
-          <div class="masthead-actions"><a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>NEAR testnet</a><button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button></div>
+        <a class="wordmark" href="/" aria-label="Hunch home">Hunch<span class="mark">.</span></a>
+        <div class="bar-end">
+          <a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>NEAR testnet</a>
+          <button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button>
         </div>
       </header>
-      <main>
-        <section class="hero" aria-labelledby="hero-title">
-          <div class="hero-copy">
-            <h1 id="hero-title">Contested claims, priced in NEAR.</h1>
-            <p class="lede">Back YES or NO. An AI arbiter judges the evidence inside a hardware enclave, and the Sworn registry verifies its signed quote on NEAR before a single stake moves.</p>
-          </div>
-          <div id="trust-slot" class="trust-slot"></div>
-        </section>
-        <section id="stats" class="stats" aria-label="Market totals"></section>
-        <section aria-labelledby="markets-title" class="market-index">
-          <div class="toolbar">
-            <h2 id="markets-title">Markets</h2>
-            <div id="filters" class="chips" role="group" aria-label="Filter markets by status"></div>
-            <details class="contract-pick"><summary>Contract</summary>
-              <form id="contract-form" class="contract-form">
-                <label for="contract-id">Hunch contract account</label>
-                <div class="field-row"><input id="contract-id" name="contract" autocomplete="off" placeholder="contract.testnet" required /><button type="submit">Load</button></div>
-              </form>
-            </details>
-          </div>
-          <p id="page-state" class="notice" role="status">Reading markets from NEAR testnet.</p>
-          <ul id="market-list" class="grid"></ul>
-        </section>
-        <section id="how" class="how" aria-labelledby="how-title">
-          <h2 id="how-title">How a claim gets settled</h2>
-          <ol class="how-steps">
-            <li><span class="step-n">1</span><h3>Evidence room</h3><p>Anyone adds sources. Each one is grouped as supporting, contradicting, context or unclassified.</p></li>
-            <li><span class="step-n">2</span><h3>Arbiter in an enclave</h3><p>An AI model reads the claim and its evidence inside a TEE and signs its answer.</p></li>
-            <li><span class="step-n">3</span><h3>Quote verified on chain</h3><p>The Sworn registry checks the enclave quote. The market settles only when it passes. A flipped quote is refused.</p></li>
-          </ol>
-        </section>
+      <main class="table">
+        <div id="stack" class="stack is-loading" aria-live="polite"><div class="card-ghost" aria-hidden="true"></div><p class="dealing">Dealing the stack from NEAR testnet</p></div>
+        <div id="actions" class="actions" role="group" aria-label="Swipe controls" hidden>
+          <button type="button" class="act act-no" data-act="no" aria-label="NO, swipe left"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>No</span></button>
+          <button type="button" class="act act-skip" data-act="skip" aria-label="Skip this claim"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Skip</span></button>
+          <button type="button" class="act act-details" data-act="details" aria-label="Details and evidence"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 5h14v14H5zM8.5 9.5h7M8.5 13h7M8.5 16.5h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Details</span></button>
+          <button type="button" class="act act-yes" data-act="yes" aria-label="YES, swipe right"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Yes</span></button>
+        </div>
+        <p class="keys" aria-hidden="true"><kbd>←</kbd> No <kbd>↑</kbd> Skip <kbd>→</kbd> Yes <kbd>Enter</kbd> Details<span id="count" class="count"></span></p>
       </main>
-      <footer><span>Odds are the share of NEAR staked on each side.</span><span>Resolution quotes are verified on chain by the Sworn registry.</span></footer>
+      <div id="sheet" class="sheet" hidden></div>
+      <div id="detail" class="detail" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <div class="detail-bar"><button type="button" class="back" data-close><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to the stack</button></div>
+        <div id="detail-body" class="detail-body"></div>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

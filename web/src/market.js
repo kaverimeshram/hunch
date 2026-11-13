@@ -58,7 +58,7 @@ export function odds(yesRaw, noRaw) {
 }
 
 export function formatTenths(tenths) {
-  return tenths === null ? '—' : `${Math.floor(tenths / 10)}.${tenths % 10}%`;
+  return tenths === null ? '-' : `${Math.floor(tenths / 10)}.${tenths % 10}%`;
 }
 
 /** Mirrors the contract's payout_for: pro rata winnings when Resolved, own stakes back when Void. */

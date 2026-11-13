@@ -1,37 +1,41 @@
 # Hunch design notes
 
-Hunch is a prediction market for claims that nobody can settle by consensus. The interface borrows the proven market anatomy (a large chance figure, Yes and No priced in cents, a probability chart, a side trade ticket) and adds what only Hunch has: every resolution is backed by an attested arbiter quote that the Sworn registry verifies on NEAR. `web/src/style.css` implements everything below.
+Hunch is a prediction market you play by swiping. Every claim has two outcomes, so the primary screen is one claim card at a time: right is YES, left is NO, up skips. `web/src/style.css` implements everything below.
 
 ## Principles
 
-1. **Price first.** Every card and claim page leads with the YES share as a large figure, with Yes and No buttons priced in cents. Every number comes from the contract or from chain history.
-2. **Trust is a first-class section.** The brass seal marks everything attested. "Quote verified" and "Flipped quote refused" links sit in the home hero, in the claim header and in "How this resolves".
-3. **Real history only.** The chart is a step line over actual stake transactions read from NearBlocks and reconciled to the contract's pools. Each point is a transaction with a link.
-4. **Evidence stays separate from price.** Market share, source stance and the arbiter's verdict each have their own section and wording.
+1. **One decision per screen.** The deck shows a single claim, its live YES share as the largest figure, a thin YES/NO bar and the NEAR staked. Nothing competes with the card.
+2. **The swipe is the stake.** A swipe on an open market opens a bottom sheet with the amount, a payout preview from the contract's own `payout_for` math and one button that signs the transaction.
+3. **Trust is a seal on the card.** The brass seal opens the Sworn proof: "Quote verified" and "Flipped quote refused" link to the transactions on NearBlocks.
+4. **Evidence one tap away.** Tapping a card flips to the claim room: odds, stake history drawn from real transactions, how it resolves and the evidence room grouped by stance.
+5. **Every number is read from the chain.** The deck loads from the contract alone; stake history is fetched only in the claim room and cached.
 
 ## Tokens
 
 | Token | Value | Use |
 |---|---|---|
-| `--paper` | `#eef1f6` | Page canvas |
-| `--surface` | `#ffffff` | Cards, ticket, panels |
-| `--ink` / `--body` / `--muted` | `#14171f` / `#3b4150` / `#676c78` | Text tiers |
-| `--line` / `--line-soft` | `#d3d9e4` / `#e4e8f0` | Borders and rules |
-| `--navy` | `#17233d` | Primary controls, resolved chip, chart line |
-| `--brass` | `#7a5200` | The seal: attested badges and proof panels |
-| `--yes` / `--no` | `#0b7a53` / `#b3261e` | YES and NO only: price buttons, side toggle, stake tags, trade button |
+| `--felt` | `#14120f` | The table: page background |
+| `--paper` / `--paper-hi` | `#efe7d4` / `#f7f1e2` | Claim cards, sheet, claim room |
+| `--ink` / `--body` / `--muted` | `#1a1712` / `#463f31` / `#766d5a` | Text tiers on paper |
+| `--felt-text` / `--felt-mute` | `#efe7d4` / `#9b927e` | Text on the table |
+| `--brass` / `--brass-bg` | `#7d5f17` / `#ecdcab` | The seal and every attested surface |
+| `--yes` / `--no` | `#12804c` / `#bf3a2e` | YES and NO only: stamps, bar, side tags, stake button |
+| `--yes-hi` / `--no-hi` | `#2fbf7a` / `#f0675b` | The same two sides on the dark table |
 
 ## Type
 
-- Newsreader for claims and section headings, Schibsted Grotesk for interface text, IBM Plex Mono for every number, amount, account and hash (tabular figures).
-- Scale: 11 / 12 / 14 / 15 / 20 / 24 / 38 / 76 px. The chance figure is the largest element on every page.
+- Gloock for claims and the percentage, Bricolage Grotesque for interface text, JetBrains Mono for numbers, accounts and hashes.
+- The percentage scales with the card height through container query units, so the figure stays the largest element from a 390 px phone to a 1440 px desktop.
+
+## Interaction
+
+- Pointer events drive the drag, so mouse and touch behave the same. The card tilts up to 16 degrees, a YES or NO stamp fades in with the drag distance, and the card flies off past 28% of its width. Up skips.
+- Arrow keys swipe, Enter opens the claim room, Escape closes the sheet or the room. With reduced motion the card does not fly and the buttons act directly.
+- Closed or awaiting markets accept a swipe as an opinion and open the claim room at the evidence.
+- When the stack is empty the screen lists each swipe with its status.
 
 ## Layout
 
-- Home: proof band, totals row, status filters (Open, Awaiting resolution, Resolved, Void), three-column card grid with a stake-history sparkline per card.
-- Claim: header with chance figure and stats, trade ticket pinned to the right on desktop and directly under the header on phones, chart with stake history, How this resolves, Evidence room.
-- Radius 14 px for cards, 9 px for controls. Focus rings are 3 px and visible on every control. Motion respects `prefers-reduced-motion`.
-
-## Trade ticket
-
-Yes and No toggle with live cents, NEAR amount with quick amounts, and a preview that applies the contract's own `payout_for` math to the pools after the stake: YES share after, payout if the chosen side wins, profit. The wallet signs the transaction.
+- Phone: header (wordmark, NEAR testnet badge, wallet), the card, four controls (No, Skip, Details, Yes).
+- Desktop: the same stack centred at 440 px with two cards fanned behind it, "No" and "Yes" cues on either side and a key legend under the controls.
+- Radius 24 px for cards, 16 px for the sheet controls, pills for chips and the wallet button. Focus rings are 3 px and visible on every control.
