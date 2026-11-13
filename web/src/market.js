@@ -88,3 +88,25 @@ export function statusLabel(fact) {
 export function isAcceptingInput(fact, nowMs = Date.now()) {
   return fact?.status === 'Open' && Number(fact.resolve_after) > nowMs;
 }
+
+/** Whole cents (0 to 100) for one side's pool share; null while nobody has staked. */
+export function cents(tenths) {
+  return tenths === null ? null : Math.round(tenths / 10);
+}
+
+/**
+ * What a new stake would pay if its side wins, using the contract's own payout_for on the pools
+ * after the stake lands. Only the new stake's extra payout is returned, so an existing position
+ * on the same side is not double counted. Assumes nobody else stakes before resolution.
+ */
+export function previewStake(fact, side, amountRaw, ownYes = 0n, ownNo = 0n) {
+  const amount = toBigInt(amountRaw);
+  const yes = toBigInt(fact.yes_pool);
+  const no = toBigInt(fact.no_pool);
+  const own = side === 'Yes' ? toBigInt(ownYes) : toBigInt(ownNo);
+  const after = { status: 'Resolved', outcome: side, yes_pool: side === 'Yes' ? yes + amount : yes, no_pool: side === 'No' ? no + amount : no };
+  const before = { status: 'Resolved', outcome: side, yes_pool: yes, no_pool: no };
+  const stakes = (s) => (side === 'Yes' ? [s, 0n] : [0n, s]);
+  const payout = payoutFor(after, ...stakes(own + amount)) - payoutFor(before, ...stakes(own));
+  return { payout, profit: payout - amount, afterTenths: odds(after.yes_pool, after.no_pool).yesTenths };
+}

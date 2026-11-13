@@ -47,3 +47,19 @@ test('status labels and input window', () => {
   assert.equal(isAcceptingInput({ status: 'Open', resolve_after: 2000 }, 2000), false);
   assert.equal(isAcceptingInput({ status: 'Pending', resolve_after: 2000 }, 1000), false);
 });
+
+test('previewStake mirrors payout_for on the pools after the stake', async () => {
+  const { previewStake, cents } = await import('./market.js');
+  const N = 10n ** 24n;
+  const fact = { yes_pool: String(N / 10n), no_pool: String(N / 20n) };
+  const yes = previewStake(fact, 'Yes', N / 20n);
+  assert.equal(yes.payout, (N / 20n) * (N / 5n) / (3n * N / 20n), '0.05 on YES: 0.05 * 0.2 / 0.15');
+  assert.equal(yes.profit, yes.payout - N / 20n);
+  const empty = previewStake({ yes_pool: '0', no_pool: '0' }, 'No', N);
+  assert.equal(empty.payout, N, 'the only staker gets their own stake back');
+  assert.equal(previewStake(fact, 'No', N).payout, N * (N / 10n + N / 20n + N) / (N / 20n + N) , 'bigger bet on the thin side');
+  const held = previewStake(fact, 'Yes', N / 20n, N / 10n, 0n);
+  assert.equal(held.payout, N / 20n, 'whole position pays 0.2 of 0.2, was 0.15 of 0.15: the extra 0.05 stake only adds its own 0.05');
+  assert.equal(cents(667), 67);
+  assert.equal(cents(null), null);
+});
