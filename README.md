@@ -25,6 +25,10 @@ npm run dev
 
 Enter a deployed Hunch contract account to read its markets. The three seeded claim records and their sources are in [`web/facts.json`](web/facts.json).
 
+## Fetch evidence pages
+
+`node scripts/fetch-evidence.mjs <contract.testnet>` reads every claim's sources (creator links and community submissions) from the contract, fetches each page and writes `web/evidence-bundles/<contract>.json`. For each source it records the title, publisher, author and publication date the page reports, a short excerpt (about 1,500 characters), and SHA-256 fingerprints of the extracted text and the raw page; sources that cannot be fetched (paywalls, errors, non-HTML) are recorded with the reason. Only public `https` pages are fetched. The fact page shows these details, labelled as unverified. Commit the bundle so the deployed site can serve it. Tests: `node --test 'scripts/lib/*.test.mjs'`.
+
 ## Deploy the reader
 
 `npm run build` in `web/` writes a static site to `web/dist`, including the runtime data files (`facts.json`, and `generated-pages.json` / `attestation-proof.json` when they exist). The live demo at https://hunch-near.vercel.app is deployed this way. On Vercel: import the repository, set **Root Directory** to `web`, keep the detected Vite preset (build `npm run build`, output `dist`), and optionally set the environment variable `VITE_HUNCH_CONTRACT` to the testnet contract the site should open by default. Visitors can still choose another contract with `?contract=`.

@@ -139,3 +139,46 @@ test('evidence summary for the top of the fact page counts every source once', (
   assert.ok(!html.includes('context'), 'context is only listed when present');
   assert.match(evidenceSummaryMarkup({ id: 'e', sources: [] }), /No evidence yet/);
 });
+
+import { applyFetched, normalizeFetch } from './evidence.js';
+
+const HASH = 'a'.repeat(64);
+const bundleFact = { sources: [
+  { url: 'https://a.com/x', status: 'ok', fetched_at: '2026-11-13T10:00:00Z', title: 'Real headline', site_name: 'A News', author: 'Jane', published_at: '2026-04-08T00:00:00Z', excerpt: 'He said <script>alert(1)</script> no.', text_sha256: HASH },
+  { url: 'https://b.com/y', status: 'http_error', http_status: 403, fetched_at: '2026-11-13T10:00:00Z' },
+  { url: 'https://c.com/z', status: 'invented_status', title: 'ignored' },
+] };
+
+test('fetched page details fill gaps but never overwrite recorded data', () => {
+  const fact = { id: 'f', creator: 'alice.testnet', sources: ['https://a.com/x#top', 'https://b.com/y', 'https://c.com/z'] };
+  const [a, b, c] = applyFetched(evidenceFromFact(fact), bundleFact);
+  assert.deepEqual([a.title, a.publisher, a.author, a.fetch.status, a.fetch.text_sha256], ['Real headline', 'A News', 'Jane', 'ok', HASH]);
+  assert.equal(b.fetch.status, 'http_error');
+  assert.equal(b.title, null, 'no metadata from a failed fetch');
+  assert.equal(c.fetch, undefined, 'unknown statuses are ignored');
+  const [kept] = applyFetched([normalizeEvidence({ url: 'https://a.com/x', title: 'Submitter title' })], bundleFact);
+  assert.equal(kept.title, 'Submitter title');
+  assert.deepEqual(applyFetched(evidenceFromFact(fact), null).map((i) => i.fetch), [undefined, undefined, undefined]);
+});
+
+test('bad bundle values are dropped', () => {
+  const record = normalizeFetch({ status: 'ok', text_sha256: 'not-a-hash', published_at: 'garbage', excerpt: 'x'.repeat(5000) });
+  assert.equal(record.text_sha256, null);
+  assert.equal(record.published_at, null);
+  assert.equal(record.excerpt.length, 1600);
+  assert.equal(normalizeFetch(null), null);
+});
+
+test('rendering shows fetched details, failures and an escaped excerpt', () => {
+  const fact = { id: 'f', creator: 'alice.testnet', sources: ['https://a.com/x', 'https://b.com/y'] };
+  const html = renderEvidenceRoom(fact, { fetched: bundleFact });
+  assert.match(html, /Real headline/);
+  assert.match(html, /<dt>Publisher<\/dt><dd>A News<\/dd>/);
+  assert.match(html, /fingerprint aaaaaaaaaa…/);
+  assert.match(html, /not verified as accurate/);
+  assert.match(html, /Could not fetch: the site returned an error \(HTTP 403\)/);
+  assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;') && !html.includes('<script>alert'), 'excerpt is escaped');
+  assert.match(html, /automated fetch of each page/);
+  assert.ok(!/verified(?! as accurate)/i.test(html.replace(/not verified as accurate/g, '')), 'nothing else claims verification');
+  assert.match(renderEvidenceRoom(fact), /have not been fetched yet/);
+});

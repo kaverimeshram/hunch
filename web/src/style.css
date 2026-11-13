@@ -85,6 +85,10 @@ button:disabled { opacity: 0.55; cursor: wait; }
 .evidence-glance { margin: 18px 0 0; color: var(--color-body); font: 12px/1.6 var(--font-mono); }
 .evidence-glance a { margin-right: 8px; color: var(--color-primary); text-decoration: none; font-weight: 600; }
 #evidence-title { scroll-margin-top: 24px; }
+.evidence-excerpt { margin-top: 12px; font-size: 13px; color: var(--color-body); }
+.evidence-excerpt summary { cursor: pointer; color: var(--color-ink); font-weight: 600; }
+.evidence-excerpt blockquote { margin: 10px 0 6px; padding: 2px 0 2px 14px; border-left: 2px solid var(--color-line); line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
+.evidence-excerpt p { margin: 0; color: var(--color-muted); font-size: 12px; }
 .evidence-lede { max-width: 62ch; margin: 12px 0 0; color: var(--color-body); font-size: 14px; line-height: 1.6; }
 .evidence-summary { display: grid; grid-template-columns: repeat(4, 1fr); margin: 28px 0 0; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
 .evidence-summary div { padding: 14px 0; }

@@ -165,6 +165,61 @@ export function validateEvidenceInput({ url, stance, note }, existingUrls = []) 
   return { value: { url: canonical, stance: CONTRACT_STANCE[stance], note: text || null } };
 }
 
+// Fetch results from scripts/fetch-evidence.mjs (web/evidence-bundles/<contract>.json).
+const FETCH_STATUS_TEXT = Object.freeze({
+  ok: 'Fetched',
+  http_error: 'Could not fetch: the site returned an error',
+  timeout: 'Could not fetch: timed out',
+  network_error: 'Could not fetch: network error',
+  unsupported_type: 'Could not fetch: not a web page',
+  too_large: 'Could not fetch: page too large',
+  blocked: 'Not fetched: not a public https page',
+});
+
+/** Validate one untrusted bundle record. Returns null if unusable. */
+export function normalizeFetch(raw) {
+  if (!raw || typeof raw !== 'object' || !Object.hasOwn(FETCH_STATUS_TEXT, raw.status)) return null;
+  const hex = (value) => (typeof value === 'string' && /^[0-9a-f]{64}$/.test(value) ? value : null);
+  return {
+    status: raw.status,
+    fetched_at: cleanTimestamp(raw.fetched_at),
+    http_status: Number.isInteger(raw.http_status) ? raw.http_status : null,
+    excerpt: raw.status === 'ok' ? cleanText(raw.excerpt, 1600) : null,
+    text_sha256: raw.status === 'ok' ? hex(raw.text_sha256) : null,
+    title: raw.status === 'ok' ? cleanText(raw.title, MAX_TEXT.title) : null,
+    publisher: raw.status === 'ok' ? cleanText(raw.site_name, MAX_TEXT.publisher) : null,
+    author: raw.status === 'ok' ? cleanText(raw.author, MAX_TEXT.author) : null,
+    published_at: raw.status === 'ok' ? cleanTimestamp(raw.published_at) : null,
+  };
+}
+
+/**
+ * Attach fetched page details to evidence items, matched by URL (fragment ignored).
+ * `bundleFact` is one entry of bundle.facts. Fetched values only fill gaps: they never
+ * replace what the contract or a submitter recorded.
+ */
+export function applyFetched(items, bundleFact) {
+  const records = new Map();
+  for (const raw of Array.isArray(bundleFact?.sources) ? bundleFact.sources : []) {
+    const key = canonicalEvidenceUrl(raw?.url);
+    const record = normalizeFetch(raw);
+    if (key && record) records.set(key, record);
+  }
+  if (!records.size) return items;
+  return items.map((item) => {
+    const fetched = records.get(canonicalEvidenceUrl(item.url));
+    if (!fetched) return item;
+    return {
+      ...item,
+      title: item.title ?? fetched.title,
+      publisher: item.publisher ?? fetched.publisher,
+      author: item.author ?? fetched.author,
+      published_at: item.published_at ?? fetched.published_at,
+      fetch: fetched,
+    };
+  });
+}
+
 /** Group items by stance, always returning every stance key in display order. */
 export function groupByStance(items) {
   const groups = Object.fromEntries(STANCE_ORDER.map((stance) => [stance, []]));
@@ -194,13 +249,26 @@ function itemMarkup(item) {
     metaRow('Added by', contributor),
     metaRow('Added', item.submitted_at ? escapeHTML(formatDate(item.submitted_at)) : 'Not recorded'),
     metaRow('Review', `<span class="review-badge" data-status="${escapeHTML(item.review_status)}" title="${escapeHTML(review.hint)}">${escapeHTML(review.label)}</span>${item.reviewed_by ? ` by ${escapeHTML(item.reviewed_by)}` : ''}`),
+    fetchRow(item.fetch),
   ].join('');
   return `<li class="evidence-item">
     <a class="evidence-link" href="${escapeHTML(item.url)}" target="_blank" rel="noopener noreferrer"><span>${escapeHTML(heading)}</span><span class="arrow" aria-hidden="true">↗</span></a>
     ${subline ? `<p class="evidence-path">${escapeHTML(subline)}</p>` : ''}
     ${item.description ? `<p class="evidence-description"><span class="evidence-note-label">Submitter's note</span> ${escapeHTML(item.description)}</p>` : ''}
     <dl class="evidence-meta">${rows}</dl>
+    ${item.fetch?.excerpt ? `<details class="evidence-excerpt"><summary>Excerpt from the page</summary><blockquote>${escapeHTML(item.fetch.excerpt)}</blockquote><p>Quoted as fetched${item.fetch.fetched_at ? ` on ${escapeHTML(formatDate(item.fetch.fetched_at))}` : ''}. Not checked for accuracy.</p></details>` : ''}
   </li>`;
+}
+
+function fetchRow(fetch) {
+  if (!fetch) return '';
+  if (fetch.status !== 'ok') {
+    const code = fetch.status === 'http_error' && fetch.http_status ? ` (HTTP ${fetch.http_status})` : '';
+    return metaRow('Page', `${escapeHTML(FETCH_STATUS_TEXT[fetch.status])}${code}`);
+  }
+  const when = fetch.fetched_at ? ` ${escapeHTML(formatDate(fetch.fetched_at))}` : '';
+  const fingerprint = fetch.text_sha256 ? ` · <span title="SHA-256 of the extracted page text: ${fetch.text_sha256}">fingerprint ${fetch.text_sha256.slice(0, 10)}…</span>` : '';
+  return metaRow('Page', `Fetched${when}${fingerprint} · not verified as accurate`);
 }
 
 function groupMarkup(stance, items) {
@@ -259,9 +327,10 @@ function formMarkup(form) {
  * options.submitted: normalised items from evidenceFromChain()
  * options.form: null to hide, or { open, closedReason, connected, depositLabel }
  */
-export function renderEvidenceRoom(fact, { submitted = [], form = null } = {}) {
+export function renderEvidenceRoom(fact, { submitted = [], form = null, fetched = null } = {}) {
   const creatorItems = evidenceFromFact(fact);
-  const items = allEvidence(fact, submitted);
+  const items = applyFetched(allEvidence(fact, submitted), fetched);
+  const hasFetched = items.some((item) => item.fetch);
   const groups = groupByStance(items);
   const rawCount = Array.isArray(fact?.sources) ? fact.sources.length : 0;
   const skipped = rawCount - creatorItems.length;
@@ -277,7 +346,10 @@ export function renderEvidenceRoom(fact, { submitted = [], form = null } = {}) {
       ? visible.map((stance) => groupMarkup(stance, groups[stance])).join('')
       : '<p class="evidence-empty evidence-empty-all">No sources have been attached to this claim yet.</p>'}
     ${skipped > 0 ? `<p class="evidence-note">Not shown: ${skipped} source ${skipped === 1 ? 'entry' : 'entries'} that ${skipped === 1 ? 'is' : 'are'} not a valid https URL or ${skipped === 1 ? 'repeats' : 'repeat'} another source.</p>` : ''}
-    ${creatorItems.length ? '<p class="evidence-note">Sources from the claim creator are stored on-chain as URLs only, so they have no classification. Titles and publishers are not shown because they have not been fetched or checked.</p>' : ''}
+    ${creatorItems.length ? '<p class="evidence-note">Sources from the claim creator are stored on-chain as URLs only, so they have no classification.</p>' : ''}
+    <p class="evidence-note">${hasFetched
+      ? 'Titles, publishers, dates and excerpts come from an automated fetch of each page. They are shown as the page states them and are not checked for accuracy. The fingerprint lets anyone confirm the text has not been changed since it was fetched.'
+      : 'Titles and publishers are not shown because the pages have not been fetched yet.'}</p>
     ${form ? formMarkup(form) : ''}
   </section>`;
 }

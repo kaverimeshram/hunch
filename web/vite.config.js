@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { copyFile } from 'node:fs/promises';
+import { copyFile, cp } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 // JSON files the app fetches from the site root at runtime. The scripts write them next to
@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 // into the build output so production hosting (e.g. Vercel) serves them too. Missing files
 // are skipped: the app treats each one as optional.
 const RUNTIME_DATA = ['facts.json', 'generated-pages.json', 'attestation-proof.json'];
+// Directories copied the same way: evidence bundles from scripts/fetch-evidence.mjs.
+const RUNTIME_DIRS = ['evidence-bundles'];
 
 function copyRuntimeData() {
   let root;
@@ -22,6 +24,13 @@ function copyRuntimeData() {
       for (const file of RUNTIME_DATA) {
         try {
           await copyFile(resolve(root, file), resolve(outDir, file));
+        } catch (error) {
+          if (error.code !== 'ENOENT') throw error;
+        }
+      }
+      for (const dir of RUNTIME_DIRS) {
+        try {
+          await cp(resolve(root, dir), resolve(outDir, dir), { recursive: true });
         } catch (error) {
           if (error.code !== 'ENOENT') throw error;
         }

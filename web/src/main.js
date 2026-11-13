@@ -17,6 +17,10 @@ const query = new URLSearchParams(location.search);
 // Contract to read: ?contract=..., then the visitor's last choice, then the deployment default
 // (VITE_HUNCH_CONTRACT, set at build time, e.g. in Vercel's environment variables).
 const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || import.meta.env.VITE_HUNCH_CONTRACT || '';
+// Fetched page details for this contract's sources (scripts/fetch-evidence.mjs). Optional.
+const evidenceBundle = /^[a-z0-9._-]{2,64}$/.test(contract)
+  ? await fetch(`/evidence-bundles/${contract}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+  : null;
 const state = document.querySelector('#page-state');
 const app = document.querySelector('#app');
 const walletButton = document.querySelector('#wallet-button');
@@ -295,6 +299,7 @@ async function renderFact() {
     </section>
     ${renderEvidenceRoom(fact, {
       submitted,
+      fetched: evidenceBundle?.contract === contract ? evidenceBundle.facts?.[id] : null,
       form: submittedRaw === null ? null : {
         open: isAcceptingInput(fact),
         closedReason: `Evidence submission closed ${formatTime(fact.resolve_after)}.`,
