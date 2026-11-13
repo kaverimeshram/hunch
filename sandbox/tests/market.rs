@@ -57,7 +57,7 @@ async fn sandbox_refuses_a_resolution_without_a_matching_signed_response_hash() 
     let (worker, root, arbiter, contract) = deploy().await;
     let now = worker.view_block().await.unwrap().timestamp() / 1_000_000;
     root.call(contract.id(), "create_fact")
-        .args_json(json!({"id":"tamper-check","claim":"The Patoshi miner was Satoshi Nakamoto","resolve_after":now+1}))
+        .args_json(json!({"id":"tamper-check","claim":"The Patoshi miner was Satoshi Nakamoto","resolve_after":now+2_000}))
         .deposit(NearToken::from_millinear(100)).transact().await.unwrap().into_result().unwrap();
     root.call(contract.id(), "stake").args_json(json!({"id":"tamper-check","side":"Yes"})).deposit(NearToken::from_millinear(1)).transact().await.unwrap().into_result().unwrap();
     worker.fast_forward(10).await.unwrap();

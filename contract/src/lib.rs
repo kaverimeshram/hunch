@@ -4,6 +4,7 @@ use near_sdk::{
     PromiseError, PromiseOrValue,
 };
 use serde::{Deserialize, Serialize};
+use schemars::JsonSchema;
 use uint::construct_uint;
 
 construct_uint! { pub struct U256(4); }
@@ -18,34 +19,39 @@ const MAX_CLAIM_BYTES: usize = 1024;
 const MAX_SOURCE_BYTES: usize = 1024;
 const MAX_RECEIPT_BYTES: usize = 16_384;
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, JsonSchema, Clone, Debug, PartialEq, Eq)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum Side { Yes, No }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, JsonSchema, Clone, PartialEq, Eq)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 pub enum Status { Open, Pending, Resolved }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, JsonSchema, Clone)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 pub struct Fact {
     pub id: String,
     pub claim: String,
     pub resolve_after: u64,
+    #[serde(with = "u128_string")]
+    #[schemars(with = "String")]
     pub yes_pool: u128,
+    #[serde(with = "u128_string")]
+    #[schemars(with = "String")]
     pub no_pool: u128,
     pub status: Status,
     pub outcome: Option<Side>,
     pub reasoning: Option<String>,
     pub sources: Vec<String>,
+    #[schemars(with = "String")]
     pub creator: AccountId,
     pub stakers: u32,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, JsonSchema, Clone)]
 #[serde(crate = "near_sdk::serde")]
 #[borsh(crate = "near_sdk::borsh")]
 pub struct Receipt {
@@ -58,7 +64,7 @@ pub struct Receipt {
     pub response_body: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(crate = "near_sdk::serde")]
 struct Verdict { ok: bool, reason: String }
 
@@ -239,9 +245,21 @@ impl Hunch {
 
     pub fn get_fact(&self, id: String) -> Option<Fact> { self.facts.get(&id).cloned() }
 
-    pub fn get_stake(&self, id: String, account: AccountId, side: Side) -> u128 {
+    pub fn get_stake(&self, id: String, account: AccountId, side: Side) -> near_sdk::json_types::U128 {
         require!(self.facts.get(&id).is_some(), "unknown fact");
-        self.stakes.get(&stake_key(&id, &account, &side)).copied().unwrap_or(0)
+        near_sdk::json_types::U128(self.stakes.get(&stake_key(&id, &account, &side)).copied().unwrap_or(0))
+    }
+}
+
+mod u128_string {
+    use serde::{de::Error, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(value: &u128, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&value.to_string())
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u128, D::Error> {
+        String::deserialize(deserializer)?.parse().map_err(D::Error::custom)
     }
 }
 
