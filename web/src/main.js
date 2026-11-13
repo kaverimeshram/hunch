@@ -1,7 +1,7 @@
 import { NearConnector } from '@hot-labs/near-connect';
 import './style.css';
 import { escapeHTML } from './html.js';
-import { renderEvidenceRoom, evidenceFromChain, evidenceFromFact, validateEvidenceInput } from './evidence.js';
+import { renderEvidenceRoom, evidenceFromChain, evidenceFromFact, evidenceSummaryMarkup, validateEvidenceInput } from './evidence.js';
 import { parseContractJson, nearAmount, toYocto, odds, formatTenths, payoutFor, statusLabel, isAcceptingInput, toBigInt } from './market.js';
 
 const RPC = 'https://near-testnet.drpc.org';
@@ -88,7 +88,12 @@ walletButton?.addEventListener('click', async () => {
     if (accountId) { await connector.disconnect(wallet); wallet = null; accountId = ''; renderWalletButton(); }
     else await ensureWallet();
     if (document.body.dataset.page === 'fact') await renderFact();
-  } catch (error) { message(error.message || 'The wallet did not connect.', true); }
+  } catch (error) {
+    // Closing or rejecting the wallet popup is a normal choice, not an error.
+    const text = error?.message || '';
+    const cancelled = /closed|cancel|reject|denied/i.test(text);
+    message(cancelled ? 'Wallet not connected. Reading claims does not need a wallet.' : (text || 'The wallet did not connect.'), !cancelled);
+  }
 });
 
 // ---------- Shared markup ----------
@@ -274,6 +279,7 @@ async function renderFact() {
       <p class="kicker">${escapeHTML(statusLabel(fact))}</p>
       <h1>${escapeHTML(fact.claim)}</h1>
       <p class="lede">The market shows where participants put their NEAR. The resolution comes separately, from an AI arbiter judging the evidence, and is only accepted once its signed answer is verified on-chain.</p>
+      ${evidenceSummaryMarkup(fact, submitted)}
     </section>
     ${proofMarkup()}
     ${generatedText ? `<section class="generated-page"><p class="kicker">AI-written summary · not attested</p><p>${escapeHTML(generatedText)}</p></section>` : ''}
