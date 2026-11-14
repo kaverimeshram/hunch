@@ -60,9 +60,16 @@ async function judge(env) {
   return { key, account: env.JUDGE_ACCOUNT, contract: env.HUNCH_CONTRACT, near: client(undefined, { fast: true }) };
 }
 
+let balanceCache = { at: 0, value: 0n };
+/** The desk's balance, read at most once a minute so the page's status call is one cheap request. */
+async function deskBalance(near, account) {
+  if (Date.now() - balanceCache.at > 60_000) balanceCache = { at: Date.now(), value: await near.balance(account) };
+  return balanceCache.value;
+}
+
 async function status(req, env) {
   const { near, account, contract } = await judge(env);
-  const balance = await near.balance(account);
+  const balance = await deskBalance(near, account);
   const token = new URL(req.url).searchParams.get("visitor") || "";
   return json({ contract, account, funded: balance >= FLOOR, quota: /^[A-Za-z0-9_-]{8,64}$/.test(token) ? visitorQuota(token) : PER_VISITOR, perVisitor: PER_VISITOR });
 }
@@ -76,7 +83,7 @@ async function stake(req, env) {
   const now = Date.now();
   admit(token, ip, now);
   const { near, key, account, contract } = await judge(env);
-  if ((await near.balance(account)) < FLOOR) throw new HttpError(503, "The sponsored stake desk is out of testnet NEAR. The owner tops it up from the faucet.");
+  if ((await deskBalance(near, account)) < FLOOR) throw new HttpError(503, "The sponsored stake desk is out of testnet NEAR. The owner tops it up from the faucet.");
   const current = await near.view(contract, "get_fact", { id: fact }).catch(() => null);
   if (!current) throw new HttpError(404, "That claim is not on the contract.");
   if (current.status !== "Open" || Date.now() >= Number(current.resolve_after)) throw new HttpError(409, "That claim has closed for staking.");

@@ -210,6 +210,13 @@ body[data-page="deck"] #app { height: 100vh; height: 100dvh; overflow: hidden; }
 .sheet-no .btn-stake { background: var(--no); }
 .btn-ghost { display: block; width: 100%; min-height: 46px; margin-top: 6px; border: 0; background: none; color: var(--muted); font: 600 14px var(--font-ui); }
 .btn-ghost:hover { color: var(--ink); }
+.btn-ghost[data-mode] { min-height: 40px; color: var(--body); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+.btn-link { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.receipt { margin: 4px 0 18px; padding: 8px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
+.receipt div { display: flex; justify-content: space-between; gap: 16px; padding: 6px 0; font-size: 14px; }
+.receipt dt { color: var(--body); }
+.receipt dd { margin: 0; min-width: 0; overflow-wrap: anywhere; text-align: right; font: 500 14px var(--font-num); font-variant-numeric: tabular-nums; }
+.receipt a { color: var(--brass); font-weight: 600; text-underline-offset: 3px; }
 .sheet-help { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .form-error { margin: 8px 0 0; color: var(--no); font-size: 13px; }
 .form-error:empty { display: none; }

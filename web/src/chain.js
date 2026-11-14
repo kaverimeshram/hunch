@@ -6,6 +6,9 @@ import { NearConnector } from '@hot-labs/near-connect';
 import { parseContractJson } from './market.js';
 
 export const RPC = 'https://near-testnet.drpc.org';
+// The relayer Worker: relays chain reads (so the page never depends on a third-party CORS header) and signs sponsored
+// testnet stakes for visitors who have no wallet.
+export const RELAYER = (import.meta.env.VITE_HUNCH_RELAYER || 'https://near-hunch.earn-shield-alerts.workers.dev').replace(/\/$/, '');
 export const EXPLORER = 'https://testnet.nearblocks.io';
 export const GAS = { stake: '30000000000000', evidence: '30000000000000', claim: '50000000000000', void: '30000000000000' };
 export const DEFAULT_EVIDENCE_DEPOSIT = '10000000000000000000000';
@@ -25,11 +28,19 @@ export const proofValid = () => attestationProof?.status === 'verified-and-refus
 
 // ---------- NEAR RPC ----------
 
-export async function view(method, args) {
-  const argsBase64 = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(args))));
-  const response = await fetch(RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 'hunch', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: argsBase64 } }) });
+async function rpcCall(url, body) {
+  const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`NEAR testnet RPC returned ${response.status}.`);
   const result = await response.json();
+  if (result.error && !result.result) throw Object.assign(new Error('rpc'), { transient: true, detail: result });
+  return result;
+}
+
+export async function view(method, args) {
+  const argsBase64 = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(args))));
+  const body = JSON.stringify({ jsonrpc: '2.0', id: 'hunch', method: 'query', params: { request_type: 'call_function', finality: 'final', account_id: contract, method_name: method, args_base64: argsBase64 } });
+  let result;
+  try { result = await rpcCall(`${RELAYER}/api/rpc`, body); } catch { result = await rpcCall(RPC, body); }
   const error = result.error || result.result?.error;
   if (error) {
     const text = typeof error === 'string' ? error : JSON.stringify(error ?? '');
@@ -88,3 +99,32 @@ export async function callContract(methodName, args, deposit, gas) {
 
 /** Closing or rejecting the wallet popup is a normal choice, not an error. */
 export const walletCancelled = (error) => /closed|cancel|reject|denied/i.test(error?.message || '');
+
+
+// ---------- Sponsored stake desk ----------
+
+export function visitorToken() {
+  try {
+    let token = localStorage.getItem('hunch-visitor');
+    if (!token) { token = crypto.randomUUID().replace(/-/g, ''); localStorage.setItem('hunch-visitor', token); }
+    return token;
+  } catch { return `session${Math.random().toString(36).slice(2, 12)}`; }
+}
+
+let deskPromise = null;
+/** The desk is offered only when it signs for the contract this page is reading and still has testnet funds. */
+export function deskStatus() {
+  deskPromise ??= fetch(`${RELAYER}/api/status?visitor=${visitorToken()}`, { signal: AbortSignal.timeout(8000) })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((s) => (s && s.funded && s.contract === contract ? s : null))
+    .catch(() => null);
+  return deskPromise;
+}
+
+/** One real testnet stake signed by the judge desk account. Resolves with the transaction and timing. */
+export async function deskStake(fact, side, amount) {
+  const response = await fetch(`${RELAYER}/api/stake`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-visitor': visitorToken() }, body: JSON.stringify({ fact, side, amount }), signal: AbortSignal.timeout(60000) });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw Object.assign(new Error(body.error || `The judge desk answered ${response.status}.`), { wallet: Boolean(body.wallet) });
+  return body;
+}

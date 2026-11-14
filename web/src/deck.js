@@ -9,7 +9,7 @@ import { barMarkup, stageChip, sealMarkup, sealPopMarkup } from './markup.js';
 import { decide, stamps, tilt, thresholdFor } from './swipe.js';
 import { recordSwipe, swipesFor, resetSwipes, unseen } from './swipes.js';
 import { forgetStakeHistory } from './history.js';
-import { contract, view, optionalView, indexedFacts, callContract, accountId, walletCancelled, GAS } from './chain.js';
+import { contract, view, optionalView, indexedFacts, callContract, accountId, walletCancelled, deskStatus, deskStake, EXPLORER, GAS } from './chain.js';
 import { renderDetail } from './detail.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -207,23 +207,44 @@ function returnCard() {
 
 let sheetState = null;
 
-function openSheet(fact, side) {
-  sheetState = { fact, side, amount: '0.5', ownYes: 0n, ownNo: 0n, sending: false };
+const AMOUNTS = { desk: ['0.01', '0.05', '0.1'], wallet: ['0.1', '0.5', '1'] };
+let desk = null;
+deskStatus().then((status) => { desk = status; });
+
+async function openSheet(fact, side) {
+  // The desk status is prefetched at load; if the visitor swipes before it answers, wait for it so the sheet opens in the right mode.
+  if (!desk) desk = await deskStatus();
+  const mode = desk && !accountId() ? 'desk' : 'wallet';
+  sheetState = { fact, side, mode, amount: AMOUNTS[mode][mode === 'desk' ? 1 : 1], ownYes: 0n, ownNo: 0n, sending: false };
   sheetEl.hidden = false;
   document.body.classList.add('locked');
   paintSheet();
   sheetEl.querySelector('input').focus({ preventScroll: true });
-  if (accountId()) {
+  if (accountId() && mode === 'wallet') {
     Promise.all(['Yes', 'No'].map((s) => view('get_stake', { id: fact.id, account: accountId(), side: s })))
       .then(([yes, no]) => { if (sheetState?.fact === fact) { sheetState.ownYes = toBigInt(yes); sheetState.ownNo = toBigInt(no); updateSheet(); } })
       .catch(() => {});
   }
 }
 
+function switchMode() {
+  if (sheetState.sending) return;
+  sheetState.mode = sheetState.mode === 'desk' ? 'wallet' : 'desk';
+  sheetState.amount = AMOUNTS[sheetState.mode][1];
+  paintSheet();
+}
+
 function paintSheet() {
-  const { fact, side } = sheetState;
+  const { fact, side, mode } = sheetState;
   const price = priceTexts(fact);
   const name = SIDE_NAME[side];
+  const isDesk = mode === 'desk';
+  const other = isDesk
+    ? '<button type="button" class="btn-ghost" data-mode>Use my own wallet instead</button>'
+    : (desk ? '<button type="button" class="btn-ghost" data-mode>No wallet? Let the judge desk stake</button>' : '');
+  const help = isDesk
+    ? 'Real NEAR testnet transaction. The judge desk account pays the stake and the gas, so there is nothing to install.'
+    : `NEAR testnet. Your wallet signs the stake. ${accountId() ? '' : 'Connect a wallet when you confirm. '}Payout assumes no one else stakes before the market closes.`;
   sheetEl.innerHTML = `<div class="sheet-scrim" data-cancel></div>
   <form class="sheet-panel sheet-${side === 'Yes' ? 'yes' : 'no'}" id="stake-sheet" novalidate role="dialog" aria-modal="true" aria-labelledby="sheet-title">
     <span class="sheet-grab" aria-hidden="true"></span>
@@ -231,16 +252,17 @@ function paintSheet() {
     <h2 id="sheet-title" class="sheet-claim">${escapeHTML(fact.claim)}</h2>
     <label class="sr-only" for="sheet-amount">Amount in NEAR</label>
     <div class="amount-field"><input id="sheet-amount" name="amount" inputmode="decimal" autocomplete="off" value="${sheetState.amount}" /><span aria-hidden="true">NEAR</span></div>
-    <div class="quick" role="group" aria-label="Quick amounts">${['0.1', '0.5', '1'].map((a) => `<button type="button" class="quick-btn" data-amount="${a}" aria-pressed="${a === sheetState.amount}">${a} NEAR</button>`).join('')}</div>
+    <div class="quick" role="group" aria-label="Quick amounts">${AMOUNTS[mode].map((a) => `<button type="button" class="quick-btn" data-amount="${a}" aria-pressed="${a === sheetState.amount}">${a} NEAR</button>`).join('')}</div>
     <dl class="preview" aria-live="polite">
       <div><dt>${name} share after</dt><dd id="pv-share">${price.yesPct}</dd></div>
       <div><dt>Payout if ${name} wins</dt><dd id="pv-payout">-</dd></div>
       <div><dt>Profit</dt><dd id="pv-profit">-</dd></div>
     </dl>
     <button type="submit" class="btn-stake" id="stake-submit">Stake</button>
+    ${other}
     <button type="button" class="btn-ghost" data-cancel>Cancel</button>
     <p class="form-error" id="stake-error" role="alert"></p>
-    <p class="sheet-help">NEAR testnet. Your wallet signs the stake. ${accountId() ? '' : 'Connect a wallet when you confirm. '}Payout assumes no one else stakes before the market closes.</p>
+    <p class="sheet-help">${help}</p>
   </form>`;
   updateSheet();
 }
@@ -283,6 +305,7 @@ function closeSheet() {
 
 function cancelSheet() {
   if (sheetState?.sending) return;
+  if (sheetState?.done) { closeSheet(); advance(); return; }
   closeSheet();
   returnCard();
 }
@@ -299,27 +322,56 @@ async function confirmStake(fact, side, amount) {
   return null;
 }
 
+const shortTx = (tx) => `${tx.slice(0, 8)}…${tx.slice(-6)}`;
+
+function paintReceipt(result, fresh, side) {
+  const name = SIDE_NAME[side];
+  sheetEl.querySelector('form').innerHTML = `<span class="sheet-grab" aria-hidden="true"></span>
+    <p class="sheet-kicker"><span class="dot"></span>Staked on NEAR testnet</p>
+    <h2 id="sheet-title" class="sheet-claim">${nearAmount(result.amount)} on ${name}</h2>
+    <dl class="receipt">
+      <div><dt>Transaction</dt><dd><a href="${EXPLORER}/txns/${encodeURIComponent(result.tx)}" target="_blank" rel="noopener">${shortTx(result.tx)}</a></dd></div>
+      <div><dt>Signed by</dt><dd>${escapeHTML(result.account)}</dd></div>
+      <div><dt>Time to finality</dt><dd>${result.seconds.toFixed(1)} s</dd></div>
+      <div><dt>YES share now</dt><dd id="rc-share">${fresh ? formatTenths(priceTexts(fresh).yesTenths) : 'reading the chain'}</dd></div>
+    </dl>
+    <a class="btn-stake btn-link" href="${EXPLORER}/txns/${encodeURIComponent(result.tx)}" target="_blank" rel="noopener">Open the transaction on NearBlocks</a>
+    <button type="button" class="btn-ghost" data-next>Next claim</button>`;
+  sheetEl.querySelector('[data-next]').focus({ preventScroll: true });
+}
+
 async function submitSheet(event) {
   event.preventDefault();
   const form = event.target;
-  if (sheetState.sending) return;
+  if (!sheetState || sheetState.sending) return;
   const errorBox = form.querySelector('#stake-error');
   const submit = form.querySelector('#stake-submit');
   errorBox.textContent = '';
-  const { fact, side } = sheetState;
+  const { fact, side, mode } = sheetState;
   let amount;
   try { amount = toYocto(form.elements.amount.value); } catch (error) { errorBox.textContent = error.message; return; }
   sheetState.sending = true;
   submit.disabled = true;
-  submit.textContent = 'Waiting for your wallet';
+  submit.textContent = mode === 'desk' ? 'Signing on NEAR testnet' : 'Waiting for your wallet';
   try {
-    await callContract('stake', { id: fact.id, side }, amount, GAS.stake);
-    submit.textContent = 'Confirming on chain';
+    let result = null;
+    if (mode === 'desk') {
+      result = await deskStake(fact.id, side, amount);
+      sheetState.sending = false;
+      sheetState.done = true;
+      paintReceipt(result, null, side);
+    } else await callContract('stake', { id: fact.id, side }, amount, GAS.stake);
+    if (!result) submit.textContent = 'Confirming on chain';
     forgetStakeHistory(contract);
     const fresh = await confirmStake(fact, side, amount);
     if (fresh) facts = facts.map((f) => (f.id === fresh.id ? fresh : f));
     recordSwipe(contract, { id: fact.id, side, kind: 'staked', amount: nearAmount(amount) });
     swipes = swipesFor(contract);
+    if (result) {
+      const share = sheetEl.querySelector('#rc-share');
+      if (share) share.textContent = fresh ? formatTenths(priceTexts(fresh).yesTenths) : 'updates with the next block';
+      return;
+    }
     closeSheet();
     advance();
     toast(fresh
@@ -327,12 +379,17 @@ async function submitSheet(event) {
       : `Staked ${nearAmount(amount)} on ${SIDE_NAME[side]}. The odds update once the block finalises.`);
   } catch (error) {
     sheetState.sending = false;
-    errorBox.textContent = walletCancelled(error) ? 'Wallet closed. Nothing was staked.' : (error.message || 'The wallet did not submit the stake.');
+    errorBox.textContent = walletCancelled(error) ? 'Wallet closed. Nothing was staked.' : (error.message || 'The stake did not go through.');
     updateSheet();
+    if (error.wallet && desk) form.querySelector('[data-mode]')?.focus();
   }
 }
 
-sheetEl.addEventListener('click', (event) => { if (event.target.closest('[data-cancel]')) cancelSheet(); });
+sheetEl.addEventListener('click', (event) => {
+  if (event.target.closest('[data-next]')) { closeSheet(); advance(); return; }
+  if (event.target.closest('[data-mode]')) { switchMode(); return; }
+  if (event.target.closest('[data-cancel]')) { if (sheetState?.done) { closeSheet(); advance(); } else cancelSheet(); }
+});
 sheetEl.addEventListener('input', (event) => { if (event.target.name === 'amount') updateSheet(); });
 sheetEl.addEventListener('submit', submitSheet);
 sheetEl.addEventListener('click', (event) => {
