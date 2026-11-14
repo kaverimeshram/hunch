@@ -521,6 +521,9 @@ body[data-page="deck"] #app { height: 100vh; height: 100dvh; overflow: hidden; }
   .positions-button { padding: 0 10px 0 12px; }
   .bar-end { gap: 6px; }
   body.has-positions .network { display: none; }
+  .wb-out { display: none; }
+  .wallet-button { flex: 0 1 auto; min-width: 0; max-width: 132px; padding: 0 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .wordmark { flex: none; }
 }
 
 .verdict-ruling { display: flex; align-items: center; gap: 10px; margin: 0; font: 600 15px/1.2 var(--font-ui); color: var(--ink); }

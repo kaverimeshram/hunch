@@ -7,7 +7,11 @@ const page = document.body.dataset.page;
 
 function paintWallet() {
   walletButton.hidden = false;
-  walletButton.textContent = accountId() ? `${accountId()} · Disconnect` : 'Connect wallet';
+  if (accountId()) {
+    walletButton.innerHTML = '<span class="wb-id"></span><span class="wb-out"> · Disconnect</span>';
+    walletButton.querySelector('.wb-id').textContent = accountId();
+    walletButton.title = 'Disconnect wallet';
+  } else { walletButton.textContent = 'Connect wallet'; walletButton.removeAttribute('title'); }
   walletButton.classList.toggle('is-connected', Boolean(accountId()));
 }
 
