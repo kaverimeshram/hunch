@@ -1,0 +1,8 @@
+{
+  "name": "hunch",
+  "private": true,
+  "scripts": {
+    "judge": "node scripts/judge.mjs",
+    "test": "npm --prefix web test && npm --prefix relayer test"
+  }
+}

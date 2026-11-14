@@ -1,0 +1,22 @@
+name: judge
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        run: |
+          npm --prefix web ci
+          npm --prefix web test
+          npm --prefix relayer test
+      - name: Live checks against the deployed site, the stake desk and NEAR testnet
+        run: node scripts/judge.mjs

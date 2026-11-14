@@ -1,0 +1,19 @@
+{
+  "contract": "hunch-c-261113191249-82174.testnet",
+  "code_hash": "65ew3Kq9teWWfjJpW11Vd8PBsiiHc6HwxaD5jFkMv57B",
+  "arbiter": "hunch-a-261113191249-82174.testnet",
+  "judge_account": "hunch-judge-1114.testnet",
+  "claims": [
+    "adam-back-satoshi",
+    "patoshi-one-million-btc",
+    "ethereum-flips-bitcoin-2027"
+  ],
+  "settled": {
+    "claim": "adam-back-satoshi",
+    "outcome": "No",
+    "resolve_tx": "CzBJufB5Bn68dYnFUJCj8ECkHtj3cwzFka9hUNZhHNjG",
+    "claim_tx": "BNEAR6hynBbmd111qFcQMXfF5U5gasrKa4bDA7sZAwxV",
+    "claimer": "hunch-n-261113191249-82174.testnet"
+  },
+  "sponsored_stake_tx": "FiKonxGEazZzqkJXfX6Heo7YmV46NsDnptebJYGNGD7y"
+}
