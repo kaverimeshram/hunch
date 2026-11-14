@@ -8,6 +8,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Gloock&family=JetBrains+Mono:wght@400;500;600&display=swap" />
     <meta name="description" content="Swipe right for YES, left for NO. Stake NEAR on contested claims that an attested AI arbiter settles." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Hunch" />
+    <meta property="og:title" content="Hunch: swipe a claim, stake NEAR" />
+    <meta property="og:description" content="Swipe right for YES, left for NO. One press signs a real stake on NEAR testnet and moves the odds. An attested AI arbiter settles it." />
+    <meta property="og:url" content="https://hunch-near.vercel.app/" />
+    <meta property="og:image" content="https://hunch-near.vercel.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A Hunch claim card showing 92% YES with the YES stamp on a NEAR testnet market." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Hunch: swipe a claim, stake NEAR" />
+    <meta name="twitter:description" content="One press signs a real stake on NEAR testnet and moves the odds. An attested AI arbiter settles it." />
+    <meta name="twitter:image" content="https://hunch-near.vercel.app/og.png" />
     <title>Hunch | Swipe a claim, stake NEAR</title>
   </head>
   <body data-page="deck">
@@ -16,6 +30,7 @@
         <a class="wordmark" href="/" aria-label="Hunch home">Hunch<span class="mark">.</span></a>
         <div class="bar-end">
           <a class="network" href="https://testnet.nearblocks.io" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span>NEAR testnet</a>
+          <button id="positions-button" class="positions-button" type="button" hidden>Positions<span class="pos-count" aria-label="positions"></span></button>
           <button id="wallet-button" class="wallet-button" type="button" hidden>Connect wallet</button>
         </div>
       </header>
@@ -35,6 +50,13 @@
         <div class="detail-bar"><button type="button" class="back" data-close><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to the stack</button></div>
         <div id="detail-body" class="detail-body"></div>
       </div>
+      <aside id="drawer" class="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <div class="drawer-scrim" data-close-drawer></div>
+        <div class="drawer-panel">
+          <div class="drawer-head"><h2 id="drawer-title">My positions</h2><button type="button" class="drawer-close" data-close-drawer aria-label="Close positions">Close</button></div>
+          <div id="drawer-body" class="drawer-body"></div>
+        </div>
+      </aside>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
     <script type="module" src="/src/main.js"></script>

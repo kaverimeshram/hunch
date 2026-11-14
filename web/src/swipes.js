@@ -9,7 +9,7 @@ function readAll(storage) {
 /** kind: 'staked' | 'opinion' | 'skip'. side: 'Yes' | 'No' | null. */
 export function recordSwipe(contract, swipe, storage = globalThis.localStorage) {
   const all = readAll(storage);
-  all[contract] = { ...all[contract], [swipe.id]: { side: swipe.side ?? null, kind: swipe.kind, amount: swipe.amount ?? null, at: swipe.at ?? Date.now() } };
+  all[contract] = { ...all[contract], [swipe.id]: { side: swipe.side ?? null, kind: swipe.kind, amount: swipe.amount ?? null, yocto: swipe.yocto ?? null, tx: swipe.tx ?? null, at: swipe.at ?? Date.now() } };
   storage?.setItem(KEY, JSON.stringify(all));
 }
 

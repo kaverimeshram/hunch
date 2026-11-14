@@ -25,15 +25,24 @@ function proofMarkup() {
   </div>`;
 }
 
-/** Above the fold for a settled claim: the arbiter's ruling, its reasoning and the two transactions that prove it. */
+/** Above the fold for a settled claim, read like a verdict: the question, the evidence weighed, the enclave proof, the ruling and the payout. */
 function verdictBanner(fact) {
   if (fact.status !== 'Resolved' || !fact.outcome) return '';
   const links = resolutionLinks(fact.id);
   const side = fact.outcome === 'Yes' ? 'YES' : 'NO';
+  const tx = (hash, label) => `<a href="${EXPLORER}/txns/${encodeURIComponent(hash)}" target="_blank" rel="noopener">${label} ↗</a>`;
+  const sources = evidenceFromFact(fact).length;
+  const enclave = proofValid()
+    ? `<li><span class="vs-n">3</span><div><h3>Enclave proof</h3><p>The arbiter ran inside a TEE as <code>${escapeHTML(attestationProof.model_id)}</code>. The Sworn registry verified its signed quote on NEAR testnet.</p><p class="verdict-links">${tx(attestationProof.attestation_tx, 'Quote verified')}${tx(attestationProof.rejected_quote_tx, 'Flipped quote refused')}</p></div></li>`
+    : '';
   return `<section class="verdict-banner verdict-${fact.outcome === 'Yes' ? 'yes' : 'no'}" aria-label="Resolution">
-    <p class="verdict-line">${SEAL_ICON}<span>The attested arbiter ruled <b>${side}</b>. The Sworn registry verified its signed answer on NEAR testnet, then the contract paid the ${side} side.</span></p>
-    ${fact.reasoning ? `<p class="verdict-why">${escapeHTML(fact.reasoning)}</p>` : ''}
-    ${links ? `<p class="verdict-links"><a href="${EXPLORER}/txns/${encodeURIComponent(links.resolve_tx)}" target="_blank" rel="noopener">Resolution transaction ↗</a>${links.claim_tx ? `<a href="${EXPLORER}/txns/${encodeURIComponent(links.claim_tx)}" target="_blank" rel="noopener">Winner payout ↗</a>` : ''}</p>` : ''}
+    <p class="verdict-ruling">${SEAL_ICON}<span>The attested arbiter ruled</span><b class="verdict-stamp">${side}</b></p>
+    <ol class="verdict-steps">
+      <li><span class="vs-n">1</span><div><h3>Evidence it weighed</h3><p>${sources ? `${sources} ${sources === 1 ? 'source' : 'sources'} from the evidence room.` : 'The sources attached to this claim.'}${fact.reasoning ? ` ${escapeHTML(fact.reasoning)}` : ''}</p></div></li>
+      <li><span class="vs-n">2</span><div><h3>Ruling</h3><p>${side}. The contract accepted it only after the registry check.</p>${links ? `<p class="verdict-links">${tx(links.resolve_tx, 'Resolution transaction')}</p>` : ''}</div></li>
+      ${enclave}
+      <li><span class="vs-n">${proofValid() ? 4 : 3}</span><div><h3>Payout</h3><p>The ${side} side was paid from the pool.</p>${links?.claim_tx ? `<p class="verdict-links">${tx(links.claim_tx, 'Winner payout')}</p>` : ''}</div></li>
+    </ol>
   </section>`;
 }
 

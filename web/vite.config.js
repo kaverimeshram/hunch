@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 // index.html, which the dev server serves, but `vite build` only copies public/. Copy them
 // into the build output so production hosting (e.g. Vercel) serves them too. Missing files
 // are skipped: the app treats each one as optional.
-const RUNTIME_DATA = ['facts.json', 'generated-pages.json', 'attestation-proof.json', 'resolutions.json'];
+const RUNTIME_DATA = ['facts.json', 'generated-pages.json', 'attestation-proof.json', 'resolutions.json', 'facts-snapshot.json'];
 
 function copyRuntimeData() {
   let root;

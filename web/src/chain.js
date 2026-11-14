@@ -15,10 +15,14 @@ export const DEFAULT_EVIDENCE_DEPOSIT = '10000000000000000000000';
 export const DEFAULT_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
 
 const json = (path, fallback) => fetch(path).then((r) => (r.ok ? r.json() : fallback)).catch(() => fallback);
-export const indexedFacts = await json('/facts.json', []);
-export const generatedPages = await json('/generated-pages.json', {});
-export const attestationProof = await json('/attestation-proof.json', null);
-const resolutionData = await json('/resolutions.json', null);
+const [indexedFacts_, generatedPages_, attestationProof_, resolutionData, snapshot_] = await Promise.all([
+  json('/facts.json', []), json('/generated-pages.json', {}), json('/attestation-proof.json', null), json('/resolutions.json', null), json('/facts-snapshot.json', null),
+]);
+export const indexedFacts = indexedFacts_;
+export const generatedPages = generatedPages_;
+export const attestationProof = attestationProof_;
+/** The last chain read taken at deploy time: lets the first card paint before any RPC answers. */
+export const factsSnapshot = snapshot_;
 
 export const query = new URLSearchParams(location.search);
 // Contract to read: ?contract=..., then the visitor's last choice, then the deployment default

@@ -6,10 +6,11 @@ import { escapeHTML } from './html.js';
 import { nearAmount, toYocto, formatTenths, previewStake, isAcceptingInput, toBigInt } from './market.js';
 import { stageOf, priceTexts, volumeOf, deckOrder, formatShortDay } from './claims.js';
 import { barMarkup, stageChip, sealMarkup, sealPopMarkup } from './markup.js';
-import { decide, stamps, tilt, thresholdFor } from './swipe.js';
+import { decide, stamps, tilt, thresholdFor, pullOf, stampScale, springStep } from './swipe.js';
 import { recordSwipe, swipesFor, resetSwipes, unseen } from './swipes.js';
 import { forgetStakeHistory } from './history.js';
-import { contract, view, optionalView, indexedFacts, callContract, accountId, walletCancelled, deskStatus, deskStake, EXPLORER, GAS } from './chain.js';
+import { moveOf, sideTenths, pct, sharePost, intentUrl, positionRows } from './moment.js';
+import { contract, factsSnapshot, view, optionalView, indexedFacts, callContract, accountId, walletCancelled, deskStatus, deskStake, EXPLORER, GAS } from './chain.js';
 import { renderDetail } from './detail.js';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -138,25 +139,25 @@ function attachTop() {
     const threshold = thresholdFor(el.offsetWidth);
     let dx = 0, dy = 0;
     el.classList.add('is-dragging');
+    cancelSpring();
+    let lastX = startX, lastT = startedAt, vx = 0;
     const move = (e) => {
       dx = e.clientX - startX;
       dy = e.clientY - startY;
-      el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${tilt(dx, el.offsetWidth)}deg)`;
-      const s = stamps(dx, dy, threshold);
-      el.style.setProperty('--o-yes', s.yes);
-      el.style.setProperty('--o-no', s.no);
-      el.style.setProperty('--o-skip', s.skip);
+      const now = performance.now();
+      if (now > lastT) vx = 0.7 * vx + 0.3 * ((e.clientX - lastX) / (now - lastT));
+      lastX = e.clientX; lastT = now;
+      paintDrag(el, dx, dy, threshold);
     };
     const end = (e) => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
       el.classList.remove('is-dragging');
-      const action = e.type === 'pointercancel' ? null : decide(dx, dy, threshold);
+      const action = e.type === 'pointercancel' ? null : decide(dx, dy, threshold, performance.now() - lastT < 80 ? vx : 0);
       if (action) { commit(action, { dx, dy }); return; }
       const tap = e.type === 'pointerup' && Math.hypot(dx, dy) < 8 && performance.now() - startedAt < 450;
-      resetCard(el);
-      if (tap) openDetails();
+      if (tap) { resetCard(el); openDetails(); } else springBack(el, dx, dy, threshold);
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', end);
@@ -164,11 +165,41 @@ function attachTop() {
   });
 }
 
+function paintDrag(el, dx, dy, threshold) {
+  el.style.transform = `translate3d(${dx}px, ${dy}px, 0) rotate(${tilt(dx, el.offsetWidth)}deg)`;
+  const s = stamps(dx, dy, threshold);
+  for (const key of ['yes', 'no', 'skip']) {
+    el.style.setProperty(`--o-${key}`, s[key]);
+    el.style.setProperty(`--s-${key}`, stampScale(s[key]));
+  }
+  stackEl.style.setProperty('--pull', pullOf(dx, dy, threshold).toFixed(3));
+  stackEl.classList.add('is-pulling');
+}
+
 function resetCard(el) {
   el.style.transform = '';
-  el.style.removeProperty('--o-yes');
-  el.style.removeProperty('--o-no');
-  el.style.removeProperty('--o-skip');
+  for (const key of ['yes', 'no', 'skip']) { el.style.removeProperty(`--o-${key}`); el.style.removeProperty(`--s-${key}`); }
+  stackEl.style.removeProperty('--pull');
+  stackEl.classList.remove('is-pulling');
+}
+
+let springFrame = 0;
+function cancelSpring() { cancelAnimationFrame(springFrame); springFrame = 0; }
+
+/** A dropped card swings back with one small overshoot instead of easing in a straight line. */
+function springBack(el, dx, dy, threshold) {
+  cancelSpring();
+  let sx = { x: dx, v: 0 }, sy = { x: dy, v: 0 };
+  let last = performance.now();
+  const frame = (now) => {
+    const dt = Math.min(0.032, (now - last) / 1000);
+    last = now;
+    for (let i = 0; i < 2; i += 1) { sx = springStep(sx, dt / 2); sy = springStep(sy, dt / 2); }
+    if (Math.abs(sx.x) < 0.4 && Math.abs(sy.x) < 0.4 && Math.abs(sx.v) < 3 && Math.abs(sy.v) < 3) { resetCard(el); springFrame = 0; return; }
+    paintDrag(el, sx.x, sy.x, threshold);
+    springFrame = requestAnimationFrame(frame);
+  };
+  springFrame = requestAnimationFrame(frame);
 }
 
 /** Fly the top card off in the swipe direction, then act on it. */
@@ -183,6 +214,7 @@ async function commit(action, { dx = 0, dy = 0 } = {}) {
     const y = action === 'skip' ? -h : dy + 40;
     el.classList.add('is-flying');
     el.style.setProperty(`--o-${action}`, 1);
+    el.style.setProperty(`--s-${action}`, 1.15);
     el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${action === 'skip' ? 0 : action === 'yes' ? 26 : -26}deg)`;
     await wait(320);
   }
@@ -220,6 +252,8 @@ async function openSheet(fact, side) {
   document.body.classList.add('locked');
   paintSheet();
   sheetEl.querySelector('input').focus({ preventScroll: true });
+  // Re-read the claim so the share and payout preview start from the pools as they stand now.
+  view('get_fact', { id: fact.id }).then((now) => { if (now && sheetState?.fact === fact && !sheetState.sending) { sheetState.fact = now; updateSheet(); } }).catch(() => {});
   if (accountId() && mode === 'wallet') {
     Promise.all(['Yes', 'No'].map((s) => view('get_stake', { id: fact.id, account: accountId(), side: s })))
       .then(([yes, no]) => { if (sheetState?.fact === fact) { sheetState.ownYes = toBigInt(yes); sheetState.ownNo = toBigInt(no); updateSheet(); } })
@@ -323,22 +357,73 @@ async function confirmStake(fact, side, amount) {
 }
 
 const shortTx = (tx) => `${tx.slice(0, 8)}…${tx.slice(-6)}`;
+const ORIGIN = location.origin;
 
-function paintReceipt(result, fresh, side) {
+/** The transaction hash from whatever a wallet returns for a signed call. */
+function txOf(result) {
+  const hash = result?.transaction?.hash || result?.transaction_outcome?.id || result?.hash || result?.transactionHash || result?.txHash;
+  return typeof hash === 'string' && /^[A-Za-z0-9]{40,50}$/.test(hash) ? hash : null;
+}
+
+const ARROW = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/** The receipt prints the proof, then the odds mover plays as soon as the contract shows the new pools. */
+function paintReceipt(receipt, side) {
   const name = SIDE_NAME[side];
+  const before = sheetState.fact;
+  const from = sideTenths(before, side);
+  const txRow = receipt.tx ? `<div><dt>Transaction</dt><dd><a href="${EXPLORER}/txns/${encodeURIComponent(receipt.tx)}" target="_blank" rel="noopener">${shortTx(receipt.tx)}</a></dd></div>` : '';
+  sheetState.receipt = receipt;
   sheetEl.querySelector('form').innerHTML = `<span class="sheet-grab" aria-hidden="true"></span>
     <p class="sheet-kicker"><span class="dot"></span>Staked on NEAR testnet</p>
-    <h2 id="sheet-title" class="sheet-claim">${nearAmount(result.amount)} on ${name}</h2>
-    <p class="receipt-claim">${escapeHTML(sheetState.fact.claim)}</p>
+    <h2 id="sheet-title" class="sheet-claim">${nearAmount(receipt.amount)} on ${name}</h2>
+    <p class="receipt-claim">${escapeHTML(before.claim)}</p>
+    <div class="mover" id="mover" data-state="reading" aria-live="polite">
+      <p class="mover-label">${name} share of the pool</p>
+      <div class="mover-nums"><span class="mover-from">${from === null ? 'New' : pct(from)}</span>${ARROW}<span class="mover-to" id="mv-to">${from === null ? '' : pct(from)}</span></div>
+      <div class="mover-bar"><i class="mover-fill" id="mv-fill" style="width:${(from ?? 0) / 10}%"></i></div>
+      <p class="mover-text" id="mv-text">Reading the new odds from NEAR testnet</p>
+    </div>
     <dl class="receipt">
-      <div><dt>Transaction</dt><dd><a href="${EXPLORER}/txns/${encodeURIComponent(result.tx)}" target="_blank" rel="noopener">${shortTx(result.tx)}</a></dd></div>
-      <div><dt>Signed by</dt><dd>${escapeHTML(result.account)}</dd></div>
-      <div><dt>Time to finality</dt><dd>${result.seconds.toFixed(1)} s</dd></div>
-      <div><dt>YES share now</dt><dd id="rc-share">${fresh ? formatTenths(priceTexts(fresh).yesTenths) : 'reading the chain'}</dd></div>
+      ${txRow}
+      <div><dt>Signed by</dt><dd>${escapeHTML(receipt.account)}</dd></div>
+      <div><dt>Time to finality</dt><dd>${receipt.seconds.toFixed(1)} s</dd></div>
     </dl>
-    <a class="btn-stake btn-link" href="${EXPLORER}/txns/${encodeURIComponent(result.tx)}" target="_blank" rel="noopener">Open the transaction on NearBlocks</a>
-    <button type="button" class="btn-ghost" data-next>Next claim</button>`;
+    <button type="button" class="btn-stake" data-next>Next claim</button>
+    <a class="btn-ghost btn-x" id="share-x" href="#" target="_blank" rel="noopener" hidden>Post result on X</a>`;
   sheetEl.querySelector('[data-next]').focus({ preventScroll: true });
+}
+
+function tween(from, to, ms, paint) {
+  if (reduceMotion.matches || from === to) { paint(to); return; }
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / ms);
+    paint(Math.round(from + (to - from) * (1 - (1 - t) ** 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+/** The cause and effect of the stake: the share slides from the old number to the one the contract now shows. */
+function playMove(fresh, side) {
+  const state = sheetState;
+  const mover = sheetEl.querySelector('#mover');
+  if (!state?.receipt || !mover) return;
+  const { receipt } = state;
+  const move = moveOf(state.fact, fresh, side, receipt.amount);
+  mover.dataset.state = move.to !== null && move.from !== null && move.to !== move.from ? (move.to > move.from ? 'up' : 'down') : 'flat';
+  const to = move.to ?? 0;
+  const label = sheetEl.querySelector('#mv-to');
+  const fill = sheetEl.querySelector('#mv-fill');
+  const startAt = move.from ?? 0;
+  fill.style.width = `${to / 10}%`;
+  tween(startAt, to, 900, (value) => { label.textContent = pct(value); });
+  sheetEl.querySelector('#mv-text').textContent = move.text;
+  const post = sharePost({ fact: state.fact, side, percent: move.to, from: move.from, amountRaw: receipt.amount, tx: receipt.tx, explorer: EXPLORER, origin: ORIGIN });
+  const link = sheetEl.querySelector('#share-x');
+  link.href = intentUrl(post);
+  link.hidden = false;
 }
 
 async function submitSheet(event) {
@@ -354,30 +439,29 @@ async function submitSheet(event) {
   sheetState.sending = true;
   submit.disabled = true;
   submit.textContent = mode === 'desk' ? 'Signing on NEAR testnet' : 'Waiting for your wallet';
+  const started = performance.now();
   try {
-    let result = null;
+    let receipt;
     if (mode === 'desk') {
-      result = await deskStake(fact.id, side, amount);
-      sheetState.sending = false;
-      sheetState.done = true;
-      paintReceipt(result, null, side);
-    } else await callContract('stake', { id: fact.id, side }, amount, GAS.stake);
-    if (!result) submit.textContent = 'Confirming on chain';
-    forgetStakeHistory(contract);
-    const fresh = await confirmStake(fact, side, amount);
-    if (fresh) facts = facts.map((f) => (f.id === fresh.id ? fresh : f));
-    recordSwipe(contract, { id: fact.id, side, kind: 'staked', amount: nearAmount(amount) });
-    swipes = swipesFor(contract);
-    if (result) {
-      const share = sheetEl.querySelector('#rc-share');
-      if (share) share.textContent = fresh ? formatTenths(priceTexts(fresh).yesTenths) : 'updates with the next block';
-      return;
+      const result = await deskStake(fact.id, side, amount);
+      receipt = { tx: result.tx, account: result.account, seconds: result.seconds, amount: result.amount };
+    } else {
+      const result = await callContract('stake', { id: fact.id, side }, amount, GAS.stake);
+      receipt = { tx: txOf(result), account: accountId(), seconds: (performance.now() - started) / 1000, amount };
     }
-    closeSheet();
-    advance();
-    toast(fresh
-      ? `Staked ${nearAmount(amount)} on ${SIDE_NAME[side]}. YES share is now ${formatTenths(priceTexts(fresh).yesTenths)}.`
-      : `Staked ${nearAmount(amount)} on ${SIDE_NAME[side]}. The odds update once the block finalises.`);
+    sheetState.sending = false;
+    sheetState.done = true;
+    paintReceipt(receipt, side);
+    forgetStakeHistory(contract);
+    recordSwipe(contract, { id: fact.id, side, kind: 'staked', amount: nearAmount(receipt.amount), yocto: String(receipt.amount), tx: receipt.tx });
+    swipes = swipesFor(contract);
+    paintPositionsButton();
+    const fresh = await confirmStake(fact, side, amount);
+    if (fresh) { facts = facts.map((f) => (f.id === fresh.id ? fresh : f)); playMove(fresh, side); }
+    else {
+      const text = sheetEl.querySelector('#mv-text');
+      if (text) text.textContent = 'The odds update once the block finalises.';
+    }
   } catch (error) {
     sheetState.sending = false;
     errorBox.textContent = walletCancelled(error) ? 'Wallet closed. Nothing was staked.' : (error.message || 'The stake did not go through.');
@@ -436,6 +520,75 @@ async function refreshFacts() {
     if (!detailOpen) renderStack();
   } catch { /* the deck keeps the facts it has */ }
 }
+
+// ---------- My positions ----------
+
+const drawerEl = $('#drawer');
+const positionsButton = $('#positions-button');
+let drawerOpen = false;
+
+function paintPositionsButton() {
+  const count = positionRows(facts, swipes).length;
+  positionsButton.hidden = count === 0;
+  document.body.classList.toggle('has-positions', count > 0);
+  positionsButton.querySelector('.pos-count').textContent = String(count);
+}
+
+function positionMarkup(row) {
+  const { fact, name } = row;
+  const tone = row.side === 'Yes' ? 'yes' : 'no';
+  const status = row.settled === 'won' ? `Resolved ${fact.outcome === 'Yes' ? 'YES' : 'NO'}. Your side won.`
+    : row.settled === 'lost' ? `Resolved ${fact.outcome === 'Yes' ? 'YES' : 'NO'}. Your side lost.`
+    : row.settled === 'void' ? 'Void. The stake is refundable.'
+    : row.payout !== null ? `Pays ${nearAmount(row.payout)} if ${name} wins` : `Open on ${name}`;
+  const post = sharePost({ fact, side: row.side, percent: sideTenths(fact, row.side), from: null, amountRaw: swipes[fact.id].yocto || '0', tx: row.tx, explorer: EXPLORER, origin: ORIGIN });
+  return `<li class="pos pos-${tone}">
+    <button type="button" class="pos-main" data-open="${escapeHTML(fact.id)}">
+      <span class="pos-claim">${escapeHTML(fact.claim)}</span>
+      <span class="pos-odds"><b>${row.percent === null ? '-' : `${row.percent}%`}</b> ${name} now</span>
+      <span class="pos-bar"><i style="width:${row.percent ?? 0}%"></i></span>
+      <span class="pos-meta"><span>Staked ${escapeHTML(row.amount)}</span><span>${escapeHTML(status)}</span></span>
+    </button>
+    <p class="pos-links">${row.tx ? `<a href="${EXPLORER}/txns/${encodeURIComponent(row.tx)}" target="_blank" rel="noopener">Transaction</a>` : ''}<a href="${intentUrl(post)}" target="_blank" rel="noopener">Post on X</a></p>
+  </li>`;
+}
+
+function paintDrawer() {
+  const rows = positionRows(facts, swipes);
+  const staked = rows.reduce((sum, row) => sum + toBigInt(swipes[row.fact.id].yocto || '0'), 0n);
+  drawerEl.querySelector('#drawer-body').innerHTML = rows.length
+    ? `<p class="drawer-sum">${rows.length} ${rows.length === 1 ? 'position' : 'positions'} · ${escapeHTML(nearAmount(staked))} staked on NEAR testnet</p><ul class="pos-list">${rows.map(positionMarkup).join('')}</ul>`
+    : '<p class="drawer-empty">Swipe a claim and stake to open a position. It lands here with its odds and payout.</p>';
+}
+
+async function openDrawer() {
+  if (drawerOpen) return;
+  drawerOpen = true;
+  drawerEl.hidden = false;
+  document.body.classList.add('locked');
+  paintDrawer();
+  drawerEl.querySelector('[data-close-drawer]').focus({ preventScroll: true });
+  const ids = positionRows(facts, swipes).map((row) => row.fact.id);
+  const fresh = await Promise.all(ids.map((id) => view('get_fact', { id }).catch(() => null)));
+  if (!drawerOpen) return;
+  facts = facts.map((fact) => fresh.find((f) => f && f.id === fact.id) || fact);
+  paintDrawer();
+}
+
+function closeDrawer() {
+  if (!drawerOpen) return;
+  drawerOpen = false;
+  drawerEl.hidden = true;
+  document.body.classList.remove('locked');
+  positionsButton.focus({ preventScroll: true });
+}
+
+positionsButton.addEventListener('click', openDrawer);
+drawerEl.addEventListener('click', (event) => {
+  if (event.target.closest('[data-close-drawer]')) { closeDrawer(); return; }
+  const row = event.target.closest('[data-open]');
+  if (row) { closeDrawer(); openDetails(row.dataset.open); }
+});
 
 // ---------- Done state ----------
 
@@ -500,9 +653,10 @@ actionsEl.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
   if (event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === 'Escape') {
-    if (sheetState) cancelSheet(); else closeDetails();
+    if (drawerOpen) closeDrawer(); else if (sheetState) cancelSheet(); else closeDetails();
     return;
   }
+  if (drawerOpen) return;
   if (sheetState || detailOpen || busy || !topCard()) return;
   if (event.target.closest('input, textarea, select')) return;
   const map = { ArrowRight: 'yes', ArrowLeft: 'no', ArrowUp: 'skip' };
@@ -512,15 +666,37 @@ document.addEventListener('keydown', (event) => {
 
 // ---------- Start ----------
 
+let touched = false;
+for (const type of ['pointerdown', 'keydown']) document.addEventListener(type, () => { touched = true; }, { capture: true, once: true });
+
+function openHashClaim() {
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash && factById(hash)) openDetails(hash);
+}
+
 export async function startDeck() {
   swipes = swipesFor(contract);
   try {
+    // First paint comes from the deploy-time snapshot of the chain; the live read replaces it a moment later.
+    const snap = factsSnapshot?.contract === contract && Array.isArray(factsSnapshot.facts) ? deckOrder(factsSnapshot.facts) : null;
+    if (snap?.length) {
+      facts = snap;
+      renderStack();
+      paintPositionsButton();
+      document.querySelector('#app').setAttribute('aria-busy', 'false');
+      const live = await loadFacts();
+      facts = live;
+      if (!touched && !sheetState && !detailOpen && !busy) renderStack();
+      paintPositionsButton();
+      if (!desk) desk = await Promise.race([deskStatus(), wait(2500).then(() => null)]);
+      return openHashClaim();
+    }
     facts = await loadFacts();
     if (!desk) desk = await Promise.race([deskStatus(), wait(2500).then(() => null)]);
     if (!facts.length) { renderDone(); return; }
     renderStack();
-    const hash = decodeURIComponent(location.hash.slice(1));
-    if (hash && factById(hash)) openDetails(hash);
+    paintPositionsButton();
+    openHashClaim();
   } catch (error) {
     stackEl.classList.remove('is-loading');
     stackEl.innerHTML = `<section class="done"><h2>The claims did not load</h2><p class="done-empty">${escapeHTML(error.message)}</p><div class="done-actions"><button type="button" class="btn-stake btn-plain" onclick="location.reload()">Try again</button></div></section>`;

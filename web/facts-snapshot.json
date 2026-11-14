@@ -1,0 +1,58 @@
+{
+  "contract": "hunch-c-261113191249-82174.testnet",
+  "block_height": 277629626,
+  "read_at": "2026-11-14T08:01:24.855Z",
+  "facts": [
+    {
+      "id": "adam-back-satoshi",
+      "claim": "Adam Back is Satoshi Nakamoto.",
+      "resolve_after": 1794597499948,
+      "yes_pool": "100000000000000000000000",
+      "no_pool": "50000000000000000000000",
+      "status": "Resolved",
+      "outcome": "No",
+      "reasoning": "The claim is not confirmed by the sources. The New York Times investigation 'suggests' Adam Back 'may be' Satoshi Nakamoto, indicating an allegation rather than a verified fact. Furthermore, two other sources explicitly state that Adam Back 'denies' being Bitcoin's creator. Therefore, the sources do not establish the claim as true; they present it as an unverified allegation denied by the subject.",
+      "sources": [
+        "https://www.theblock.co/news/business/2026-04-08-nyt-investigation-suggests-adam-back-may-be-satoshi-nakamoto-396663",
+        "https://techcrunch.com/2026/04/08/british-cryptographer-adam-back-denies-nyt-report-that-he-is-bitcoin-creator-satoshi-nakamoto/",
+        "https://www.theguardian.com/technology/2026/apr/08/british-computer-scientist-adam-back-denies-he-is-bitcoin-developer-satoshi-nakamoto"
+      ],
+      "creator": "hunch-c-261113191249-82174.testnet",
+      "stakers": 2
+    },
+    {
+      "id": "patoshi-one-million-btc",
+      "claim": "The Patoshi-pattern miner mined at least 1,000,000 BTC.",
+      "resolve_after": 1830297540000,
+      "yes_pool": "600000000000000000000000",
+      "no_pool": "50000000000000000000000",
+      "status": "Open",
+      "outcome": null,
+      "reasoning": null,
+      "sources": [
+        "https://bitslog.com/2013/04/17/the-well-deserved-fortune-of-satoshi-nakamoto/",
+        "https://www.theblock.co/news/business/2024-12-03-blackrock-ibit-spot-bitcoin-etf-500000-btc-329190",
+        "https://bitquery.io/investigations/satoshi-nakamoto-net-worth"
+      ],
+      "creator": "hunch-c-261113191249-82174.testnet",
+      "stakers": 3
+    },
+    {
+      "id": "ethereum-flips-bitcoin-2027",
+      "claim": "Ethereum market capitalization will exceed Bitcoin market capitalization at the UTC close on 31 December 2027.",
+      "resolve_after": 1830297540000,
+      "yes_pool": "550000000000000000000000",
+      "no_pool": "170000000000000000000000",
+      "status": "Open",
+      "outcome": null,
+      "reasoning": null,
+      "sources": [
+        "https://www.coingecko.com/en/coins/bitcoin/historical_data",
+        "https://www.coingecko.com/en/coins/ethereum/historical_data",
+        "https://flippening.org/"
+      ],
+      "creator": "hunch-c-261113191249-82174.testnet",
+      "stakers": 4
+    }
+  ]
+}

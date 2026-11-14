@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Hunch share card</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Gloock&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1200px;height:630px;overflow:hidden;background-color:#14120f;background-image:radial-gradient(90% 90% at 80% 10%,#2a251b 0%,transparent 60%);color:#efe7d4;font-family:"Bricolage Grotesque",sans-serif;display:grid;grid-template-columns:560px 480px;gap:40px;padding:0 64px;align-items:center}
+.left{display:flex;flex-direction:column;gap:22px}
+.word{font:400 64px/1 Gloock,serif;letter-spacing:-.01em}.word i{color:#d6a93f;font-style:normal}
+.pitch{font:700 40px/1.12 "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.pitch b{color:#2fbf7a}.pitch u{color:#f0675b;text-decoration:none}
+.sub{font:500 21px/1.4 "Bricolage Grotesque",sans-serif;color:#9b927e;max-width:480px}
+.chip{display:inline-flex;align-items:center;gap:10px;width:max-content;padding:9px 16px;border:1px solid rgba(241,234,217,.22);border-radius:999px;font:500 16px "JetBrains Mono",monospace;color:#9b927e}
+.chip s{width:10px;height:10px;border-radius:50%;background:#2fbf7a;display:block}
+.stack{position:relative;width:480px;height:500px}
+.card>*{flex:none}.card{position:absolute;left:0;top:0;width:480px;height:500px;border-radius:26px;background:#efe7d4;color:#1a1712;padding:30px 32px;display:flex;flex-direction:column;box-shadow:0 40px 70px -30px #000}
+.b1{transform:translate(-26px,16px) rotate(-3.4deg) scale(.97);filter:brightness(.7)}
+.b2{transform:translate(30px,26px) rotate(3.6deg) scale(.94);filter:brightness(.5)}
+.top{display:flex;gap:10px;font:600 14px "JetBrains Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:#7d5f17}
+.top span{padding:6px 12px;border-radius:999px;background:#ecdcab}
+.claim{margin-top:22px;font:400 38px/1.08 Gloock,serif;letter-spacing:-.012em}
+.pct{margin-top:auto;font:400 112px/1 Gloock,serif;letter-spacing:-.02em}.pct sup{font-size:56px;vertical-align:top;position:relative;top:14px}.pct span{font:600 26px "JetBrains Mono",monospace;margin-left:12px;color:#12804c}
+.bar{height:16px;border-radius:16px;background:#bf3a2e;overflow:hidden;margin-top:14px}.bar i{display:block;height:100%;width:92%;background:#12804c}
+.foot{display:flex;justify-content:space-between;margin-top:16px;font:500 15px "JetBrains Mono",monospace;color:#766d5a}
+.stamp{position:absolute;bottom:150px;right:30px;transform:rotate(-9deg);padding:6px 20px 2px;border:6px solid #12804c;border-radius:14px;color:#12804c;font:400 70px/1 Gloock,serif;letter-spacing:.06em;background:rgba(247,241,226,.7)}
+</style></head><body>
+<div class="left">
+<div class="word">Hunch<i>.</i></div>
+<div class="pitch">Swipe a claim. <b>Stake NEAR.</b> An attested AI arbiter settles it.</div>
+<div class="sub">No wallet needed: one press signs a real stake on NEAR testnet and the odds move.</div>
+<div class="chip"><s></s>NEAR testnet · hunch-near.vercel.app</div>
+</div>
+<div class="stack">
+<div class="card b2"></div><div class="card b1"></div>
+<div class="card">
+<div class="top"><span>Open</span><span>Attested arbiter</span></div>
+<div class="claim">The Patoshi-pattern miner mined at least 1,000,000 BTC.</div>
+<div class="pct">92<sup>%</sup><span>YES</span></div>
+<div class="bar"><i></i></div>
+<div class="foot"><span>0.65 NEAR staked</span><span>3 stakers</span><span>NEAR testnet</span></div>
+<div class="stamp">YES</div>
+</div></div>
+</body></html>
