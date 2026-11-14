@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 
 const SITE = process.env.HUNCH_URL || 'https://hunch-near.vercel.app';
-const RELAYER = process.env.HUNCH_RELAYER || 'https://near-hunch.nearbuild.workers.dev';
+const RELAYER = process.env.HUNCH_RELAYER || 'https://near-hunch.nearlive.workers.dev';
 const evidence = JSON.parse(readFileSync(new URL('../docs/deployment.json', import.meta.url), 'utf8'));
 const CONTRACT = evidence.contract;
 const results = [];

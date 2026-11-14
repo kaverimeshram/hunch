@@ -8,7 +8,7 @@ import { parseContractJson } from './market.js';
 export const RPC = 'https://near-testnet.drpc.org';
 // The relayer Worker: relays chain reads (so the page never depends on a third-party CORS header) and signs sponsored
 // testnet stakes for visitors who have no wallet.
-export const RELAYER = (import.meta.env.VITE_HUNCH_RELAYER || 'https://near-hunch.nearbuild.workers.dev').replace(/\/$/, '');
+export const RELAYER = (import.meta.env.VITE_HUNCH_RELAYER || 'https://near-hunch.nearlive.workers.dev').replace(/\/$/, '');
 export const EXPLORER = 'https://testnet.nearblocks.io';
 export const GAS = { stake: '30000000000000', evidence: '30000000000000', claim: '50000000000000', void: '30000000000000' };
 export const DEFAULT_EVIDENCE_DEPOSIT = '10000000000000000000000';
