@@ -5,3 +5,5 @@ target-wasm/
 node_modules/
 web/dist/
 .progress/TESTBOX.id
+
+.agentctx/
