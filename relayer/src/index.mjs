@@ -64,7 +64,11 @@ let balanceCache = { at: 0, value: 0n };
 /** The desk's balance, read at most once a minute so the page's status call is one cheap request. */
 async function deskBalance(near, account) {
   if (Date.now() - balanceCache.at > 60_000) {
-    const value = await near.balance(account);
+    let value = 0n;
+    for (let attempt = 0; attempt < 5 && value === 0n; attempt += 1) {
+      if (attempt) await new Promise((r) => setTimeout(r, 400 * attempt));
+      value = await near.balance(account).catch(() => 0n);
+    }
     // 0 means the RPC refused the read, not that the desk is empty: keep the last good value rather than cache a false "unfunded"
     if (value === 0n) { if (balanceCache.value > 0n) return balanceCache.value; throw new HttpError(503, "NEAR testnet RPC is busy. Try again in a few seconds."); }
     balanceCache = { at: Date.now(), value };
