@@ -78,7 +78,7 @@ function cardMarkup(fact, depth, position, total) {
       ${barMarkup(fact)}
       <p class="legend"><span class="lg-yes">YES ${price.yesCents}</span><span class="lg-no">NO ${price.noCents}</span></p>
     </div>
-    ${note ? `<p class="card-note">${escapeHTML(note)}</p>` : `<p class="card-note card-note-open">Swipe right for YES, left for NO${desk ? '. No wallet needed.' : ''}</p>`}
+    ${note ? `<p class="card-note">${escapeHTML(note)}</p>` : `<p class="card-note card-note-open">Swipe right to stake YES, left for NO${desk ? '. No wallet needed.' : ''}</p>`}
     <dl class="card-foot">
       <div><dt>Staked</dt><dd>${escapeHTML(nearAmount(volumeOf(fact)))}</dd></div>
       <div><dt>${close > Date.now() ? 'Closes' : 'Ended'}</dt><dd>${escapeHTML(formatShortDay(close))}</dd></div>
@@ -329,6 +329,7 @@ function paintReceipt(result, fresh, side) {
   sheetEl.querySelector('form').innerHTML = `<span class="sheet-grab" aria-hidden="true"></span>
     <p class="sheet-kicker"><span class="dot"></span>Staked on NEAR testnet</p>
     <h2 id="sheet-title" class="sheet-claim">${nearAmount(result.amount)} on ${name}</h2>
+    <p class="receipt-claim">${escapeHTML(sheetState.fact.claim)}</p>
     <dl class="receipt">
       <div><dt>Transaction</dt><dd><a href="${EXPLORER}/txns/${encodeURIComponent(result.tx)}" target="_blank" rel="noopener">${shortTx(result.tx)}</a></dd></div>
       <div><dt>Signed by</dt><dd>${escapeHTML(result.account)}</dd></div>
