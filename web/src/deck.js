@@ -78,7 +78,7 @@ function cardMarkup(fact, depth, position, total) {
       ${barMarkup(fact)}
       <p class="legend"><span class="lg-yes">YES ${price.yesCents}</span><span class="lg-no">NO ${price.noCents}</span></p>
     </div>
-    ${note ? `<p class="card-note">${escapeHTML(note)}</p>` : `<p class="card-note card-note-open">Swipe right to stake YES, left for NO${desk ? '. No wallet needed.' : ''}</p>`}
+    ${note ? `<p class="card-note">${escapeHTML(note)}</p>` : `<p class="card-note card-note-open">Swipe right for YES, left for NO${desk ? '. 0.05 NEAR per swipe, sponsored on testnet.' : ''}</p>`}
     <dl class="card-foot">
       <div><dt>Staked</dt><dd>${escapeHTML(nearAmount(volumeOf(fact)))}</dd></div>
       <div><dt>${close > Date.now() ? 'Closes' : 'Ended'}</dt><dd>${escapeHTML(formatShortDay(close))}</dd></div>
