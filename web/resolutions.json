@@ -1,0 +1,10 @@
+{
+  "contract": "hunch-c-261113191249-82174.testnet",
+  "facts": {
+    "adam-back-satoshi": {
+      "resolve_tx": "CzBJufB5Bn68dYnFUJCj8ECkHtj3cwzFka9hUNZhHNjG",
+      "claim_tx": "BNEAR6hynBbmd111qFcQMXfF5U5gasrKa4bDA7sZAwxV",
+      "claimer": "hunch-n-261113191249-82174.testnet"
+    }
+  }
+}

@@ -26,7 +26,7 @@ export function proofLinks() {
 /** The brass seal on a card. A button, so it opens the proof without starting a swipe. */
 export function sealMarkup() {
   if (!proofValid()) return '';
-  return `<button type="button" class="seal" aria-expanded="false" aria-controls="seal-pop">${SEAL_ICON}<span>Resolved by an attested AI arbiter</span></button>`;
+  return `<button type="button" class="seal" aria-expanded="false" aria-controls="seal-pop">${SEAL_ICON}<span>Attested AI arbiter</span></button>`;
 }
 
 export function sealPopMarkup() {

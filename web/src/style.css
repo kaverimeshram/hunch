@@ -443,3 +443,14 @@ body[data-page="deck"] #app { height: 100vh; height: 100dvh; overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* ---- Settled claim: the arbiter's ruling above the fold ---- */
+.verdict-banner { margin: 18px 0 0; padding: 16px 18px; border-radius: 16px; border: 1.5px solid var(--brass); background: var(--paper-hi); }
+.verdict-banner.verdict-no { border-color: var(--no); }
+.verdict-banner.verdict-yes { border-color: var(--yes); }
+.verdict-line { display: flex; gap: 10px; align-items: flex-start; margin: 0; font: 600 15px/1.4 var(--font-ui); color: var(--ink); }
+.verdict-line svg { flex: none; margin-top: 2px; color: var(--brass); }
+.verdict-why { margin: 10px 0 0; color: var(--body); font-size: 14px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.verdict-links { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 12px 0 0; }
+.verdict-links a { color: var(--brass); font: 600 13px var(--font-ui); text-underline-offset: 3px; }
+.verdict-banner + .trust-strip { margin-top: 12px; }

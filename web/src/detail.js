@@ -9,7 +9,7 @@ import { seriesFor, reconciles, cachedStakeHistory, forgetStakeHistory } from '.
 import { chartSvg } from './chart.js';
 import { priceTexts, volumeOf, formatTime, formatDay, shortHash, shortAccount } from './claims.js';
 import { stageChip, barMarkup, proofLinks, SEAL_ICON } from './markup.js';
-import { contract, view, optionalView, callContract, ensureWallet, accountId, walletReady, attestationProof, proofValid, EXPLORER, GAS, DEFAULT_EVIDENCE_DEPOSIT, DEFAULT_GRACE_MS } from './chain.js';
+import { contract, view, optionalView, callContract, ensureWallet, accountId, walletReady, attestationProof, proofValid, resolutionLinks, EXPLORER, GAS, DEFAULT_EVIDENCE_DEPOSIT, DEFAULT_GRACE_MS } from './chain.js';
 
 const VERDICT_LABEL = { Yes: 'Claim judged true', No: 'Claim judged false', Insufficient: 'Insufficient evidence' };
 const QUICK_AMOUNTS = ['0.1', '0.5', '1', '5'];
@@ -23,6 +23,18 @@ function proofMarkup() {
     <p>Sworn verified the enclave quote for this model. Changing one byte made the registry refuse it.</p>
     <div class="proof-links">${proofLinks()}<a class="proof-link" href="${registryUrl}" target="_blank" rel="noopener">Registry ${escapeHTML(attestationProof.registry)} ↗</a></div>
   </div>`;
+}
+
+/** Above the fold for a settled claim: the arbiter's ruling, its reasoning and the two transactions that prove it. */
+function verdictBanner(fact) {
+  if (fact.status !== 'Resolved' || !fact.outcome) return '';
+  const links = resolutionLinks(fact.id);
+  const side = fact.outcome === 'Yes' ? 'YES' : 'NO';
+  return `<section class="verdict-banner verdict-${fact.outcome === 'Yes' ? 'yes' : 'no'}" aria-label="Resolution">
+    <p class="verdict-line">${SEAL_ICON}<span>The attested arbiter ruled <b>${side}</b>. The Sworn registry verified its signed answer on NEAR testnet, then the contract paid the ${side} side.</span></p>
+    ${fact.reasoning ? `<p class="verdict-why">${escapeHTML(fact.reasoning)}</p>` : ''}
+    ${links ? `<p class="verdict-links"><a href="${EXPLORER}/txns/${encodeURIComponent(links.resolve_tx)}" target="_blank" rel="noopener">Resolution transaction ↗</a>${links.claim_tx ? `<a href="${EXPLORER}/txns/${encodeURIComponent(links.claim_tx)}" target="_blank" rel="noopener">Winner payout ↗</a>` : ''}</p>` : ''}
+  </section>`;
 }
 
 function resolutionMarkup(fact, history) {
@@ -223,6 +235,7 @@ export async function renderDetail(root, id, { side = '', lean = '', onChange = 
             <div><dt>${closeLabel}</dt><dd>${escapeHTML(formatDay(fact.resolve_after))}</dd></div>
           </dl>
         </div>
+        ${verdictBanner(fact)}
         ${proofValid() ? `<p class="trust-strip">${SEAL_ICON}<span>Settles only on an attested arbiter quote.</span>${proofLinks()}<a href="#resolves" data-jump="resolves">How this resolves</a></p>` : ''}
         ${evidenceSummaryMarkup(fact, submitted)}
       </header>

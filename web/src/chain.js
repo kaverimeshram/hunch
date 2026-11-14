@@ -18,11 +18,15 @@ const json = (path, fallback) => fetch(path).then((r) => (r.ok ? r.json() : fall
 export const indexedFacts = await json('/facts.json', []);
 export const generatedPages = await json('/generated-pages.json', {});
 export const attestationProof = await json('/attestation-proof.json', null);
+const resolutionData = await json('/resolutions.json', null);
 
 export const query = new URLSearchParams(location.search);
 // Contract to read: ?contract=..., then the visitor's last choice, then the deployment default
 // (VITE_HUNCH_CONTRACT, set at build time, e.g. in Vercel's environment variables).
 export const contract = query.get('contract') || localStorage.getItem('hunch-contract') || localStorage.getItem('truthpage-contract') || import.meta.env.VITE_HUNCH_CONTRACT || 'hunch-c-261113191249-82174.testnet';
+
+/** Transaction links for a settled claim, only when the file was written for the contract this page reads. */
+export const resolutionLinks = (id) => (resolutionData?.contract === contract ? resolutionData.facts?.[id] || null : null);
 
 export const proofValid = () => attestationProof?.status === 'verified-and-refused' && /^[A-Za-z0-9]+$/.test(attestationProof.attestation_tx || '') && /^[A-Za-z0-9]+$/.test(attestationProof.rejected_quote_tx || '');
 
