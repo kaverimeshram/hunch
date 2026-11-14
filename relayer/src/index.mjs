@@ -63,7 +63,12 @@ async function judge(env) {
 let balanceCache = { at: 0, value: 0n };
 /** The desk's balance, read at most once a minute so the page's status call is one cheap request. */
 async function deskBalance(near, account) {
-  if (Date.now() - balanceCache.at > 60_000) balanceCache = { at: Date.now(), value: await near.balance(account) };
+  if (Date.now() - balanceCache.at > 60_000) {
+    const value = await near.balance(account);
+    // 0 means the RPC refused the read, not that the desk is empty: keep the last good value rather than cache a false "unfunded"
+    if (value === 0n) { if (balanceCache.value > 0n) return balanceCache.value; throw new HttpError(503, "NEAR testnet RPC is busy. Try again in a few seconds."); }
+    balanceCache = { at: Date.now(), value };
+  }
   return balanceCache.value;
 }
 
@@ -108,7 +113,8 @@ async function relay(req) {
     try {
       const res = await fetch(upstream, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload });
       const out = await res.json();
-      if (out.error && (out.error.code === -429 || /rate limit|Temporary internal/i.test(JSON.stringify(out.error)))) continue;
+      if (!out.result && (out.error?.code === -429 || out.code === 429 || /rate limit|too many requests|Temporary internal/i.test(JSON.stringify(out)))) { await new Promise((r) => setTimeout(r, 250)); continue; }
+      if (!out.result && !out.error) continue;
       return json(out);
     } catch { /* next upstream */ }
   }
