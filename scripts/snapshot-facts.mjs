@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const deployment = JSON.parse(readFileSync(new URL('../docs/deployment.json', import.meta.url), 'utf8'));
 const contract = process.env.HUNCH_CONTRACT || deployment.contract;
-const RPCS = [process.env.HUNCH_RPC, 'https://near-testnet.drpc.org', 'https://rpc.testnet.near.org'].filter(Boolean);
+const RPCS = [process.env.HUNCH_RPC, 'https://near-testnet.drpc.org', 'https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'].filter(Boolean);
 
 async function rpc(method, params) {
   let last = 'no RPC answered';

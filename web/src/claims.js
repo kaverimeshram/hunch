@@ -22,13 +22,17 @@ const STAGE_ORDER = { open: 0, awaiting: 1, resolved: 2, void: 3 };
 
 /** Deck order: markets that take stakes first (soonest close first), then the rest by volume. */
 export function deckOrder(facts, nowMs = Date.now()) {
-  return [...facts].sort((a, b) => {
+  const sorted = [...facts].sort((a, b) => {
     const [sa, sb] = [stageOf(a, nowMs).key, stageOf(b, nowMs).key];
     if (sa !== sb) return STAGE_ORDER[sa] - STAGE_ORDER[sb];
     if (sa === 'open') return Number(a.resolve_after) - Number(b.resolve_after);
     const diff = volumeOf(b) - volumeOf(a);
     return diff > 0n ? 1 : diff < 0n ? -1 : 0;
   });
+  // A settled claim is the second card: the visitor meets the arbiter's ruling inside the first swipes.
+  const settled = sorted.findIndex((fact) => stageOf(fact, nowMs).key === 'resolved');
+  if (sorted.length > 2 && settled > 1 && stageOf(sorted[0], nowMs).key === 'open') sorted.splice(1, 0, sorted.splice(settled, 1)[0]);
+  return sorted;
 }
 
 const date = (ms, opts) => new Date(Number(ms)).toLocaleString('en-GB', { ...opts, timeZone: 'UTC' });

@@ -18,7 +18,7 @@ test('deck puts stakeable markets first, soonest close first', () => {
     fact('soon', { resolve_after: NOW + 10 }),
     fact('done', { status: 'Resolved', outcome: 'Yes' }),
   ];
-  assert.deepEqual(deckOrder(facts, NOW).map((f) => f.id), ['soon', 'late', 'awaiting', 'done']);
+  assert.deepEqual(deckOrder(facts, NOW).map((f) => f.id), ['soon', 'done', 'late', 'awaiting']);
 });
 
 test('price text shows a dash until someone stakes', () => {
