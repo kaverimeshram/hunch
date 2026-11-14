@@ -11,6 +11,7 @@ Readers who want to put a position behind a contested claim, and desks that need
 - Each claim is one card with the live YES share, a YES and NO bar and the NEAR staked.
 - A swipe on an open claim opens a stake sheet. The judge desk signs the stake from a testnet account, or the visitor's own wallet (Meteor, Intear, MyNearWallet, Nightly, Ledger) signs it.
 - After the close time an arbiter answer from NEAR AI Cloud is submitted to the contract. The contract calls the Sworn registry on NEAR, which verifies the model's signature over the exact request and response. Only a verified answer settles the claim.
+- After a stake lands the receipt plays the odds mover from the old share to the new one, offers a prefilled post for X, and the stake joins the visitor's Positions list with live odds and payout if right.
 - Winners claim a pro rata share of both pools. An insufficient answer voids the claim and every staker takes their own stake back.
 
 ## Evidence
@@ -18,11 +19,12 @@ Readers who want to put a position behind a contested claim, and desks that need
 | Fact | Evidence |
 |---|---|
 | A cold visitor stakes with no wallet and gets a testnet transaction | [FiKonxGEazZzqkJXfX6Heo7YmV46NsDnptebJYGNGD7y](https://testnet.nearblocks.io/txns/FiKonxGEazZzqkJXfX6Heo7YmV46NsDnptebJYGNGD7y), [9unGUSzNJhRqiLK63eHdxpyv3qjSyMcKg9S42PkxwjZD](https://testnet.nearblocks.io/txns/9unGUSzNJhRqiLK63eHdxpyv3qjSyMcKg9S42PkxwjZD) |
+| A stake moves the odds and the page shows the move: "Your 0.05 NEAR moved YES from 92.9% to 93.3%" | [4bTwYa4tu22rb1J291GFLHSiq8L1i1vh9wNnyt4fN5bX](https://testnet.nearblocks.io/txns/4bTwYa4tu22rb1J291GFLHSiq8L1i1vh9wNnyt4fN5bX) |
 | An attested arbiter answer settles a claim through the Sworn registry | [CzBJufB5Bn68dYnFUJCj8ECkHtj3cwzFka9hUNZhHNjG](https://testnet.nearblocks.io/txns/CzBJufB5Bn68dYnFUJCj8ECkHtj3cwzFka9hUNZhHNjG), `adam-back-satoshi` settles Resolved: No |
 | The winning side is paid from both pools | [BNEAR6hynBbmd111qFcQMXfF5U5gasrKa4bDA7sZAwxV](https://testnet.nearblocks.io/txns/BNEAR6hynBbmd111qFcQMXfF5U5gasrKa4bDA7sZAwxV) |
 | The registry accepts the genuine quote | [8uaeLKJHYtFdVAHz3QoN9d68pfabQN1BFKvexEVKVUp](https://testnet.nearblocks.io/txns/8uaeLKJHYtFdVAHz3QoN9d68pfabQN1BFKvexEVKVUp) |
 | The registry refuses a quote with one byte flipped | [3RMXYbZnPMm88BiLrqNWLFL3Y52xu1LmwncFBSaG9stq](https://testnet.nearblocks.io/txns/3RMXYbZnPMm88BiLrqNWLFL3Y52xu1LmwncFBSaG9stq) |
-| Every claim above is re-checked against the live URL, the stake desk and testnet | `npm run judge` (10 checks, also run by CI on every push) |
+| Every claim above is re-checked against the live URL, the stake desk and testnet | `npm run judge` (12 checks, also run by CI on every push) |
 | Contract unit tests, sandbox tests and the response-hash mutation check | `bash scripts/test.sh` |
 
 ## Try it in 60 seconds

@@ -43,6 +43,22 @@ await check('live site serves the swipe deck', async () => {
   if (!js) throw new Error('bundle missing');
   return js;
 });
+await check('link card: og tags and a 1200x630 image served from the live origin', async () => {
+  const html = await (await fetch(SITE)).text();
+  const image = html.match(/property="og:image" content="([^"]+)"/)?.[1];
+  if (!image || !/twitter:card" content="summary_large_image"/.test(html) || !/property="og:title"/.test(html)) throw new Error('og or twitter tags missing');
+  const res = await fetch(image);
+  const type = res.headers.get('content-type') || '';
+  const bytes = Buffer.from(await res.arrayBuffer());
+  if (!res.ok || !type.startsWith('image/')) throw new Error(`image ${res.status} ${type}`);
+  if (bytes.readUInt32BE(16) !== 1200 || bytes.readUInt32BE(20) !== 630) throw new Error('image is not 1200x630');
+  return `${image.split('/').pop()} ${type}`;
+});
+await check('the first card paints from the deploy snapshot of the contract', async () => {
+  const snapshot = await (await fetch(`${SITE}/facts-snapshot.json`)).json();
+  if (snapshot.contract !== CONTRACT || !snapshot.facts?.length) throw new Error('snapshot does not match the contract');
+  return `${snapshot.facts.length} claims at block ${snapshot.block_height}`;
+});
 await check('sponsored stake desk is funded and signs for this contract', async () => {
   const status = await (await fetch(`${RELAYER}/api/status?visitor=judge-check-0001`)).json();
   if (!status.funded || status.contract !== CONTRACT) throw new Error(JSON.stringify(status));
