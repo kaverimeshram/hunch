@@ -2,6 +2,8 @@ Hunch gives contested claims a public NEAR market where readers inspect sources,
 
 [![judge](https://github.com/kaverimeshram/hunch/actions/workflows/judge.yml/badge.svg)](https://github.com/kaverimeshram/hunch/actions/workflows/judge.yml)
 
+[![Hunch live: a claim card with YES and NO stakes on NEAR testnet](docs/screenshot.png)](https://hunch-near.vercel.app)
+
 **Live demo (NEAR testnet):** [hunch-near.vercel.app](https://hunch-near.vercel.app). It reads a test contract and uses testnet NEAR only.
 
 The contract records each claim, its source URLs, both stake pools, and each account's position. Odds are the share of NEAR in each pool. A NEAR AI Cloud answer can resolve a market only after the contract asks Sworn's on-chain registry to verify the registered model key and the signature over that exact request and response. Winners claim a pro rata share of the pools.
